@@ -1,0 +1,66 @@
+package backup
+
+import (
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
+	"backup-service/internal/config"
+)
+
+type SQLiteBackup struct {
+	DBPath string
+}
+
+func NewSQLiteBackup(dbPath string) *SQLiteBackup {
+	return &SQLiteBackup{
+		DBPath: dbPath,
+	}
+}
+
+func NewSQLiteBackupFromConfig(cfg *config.SQLiteConfig) *SQLiteBackup {
+	return &SQLiteBackup{
+        DBPath: cfg.SQLitePath,
+    }
+}
+
+func (s *SQLiteBackup) Create(outputDir string) (string, error) {
+	timestamp := time.Now().Format("2006-01-02_15-04")
+	filename := fmt.Sprintf("sqlite_%s.db.bak", timestamp)
+	fullPath := filepath.Join(outputDir, filename)
+
+	// Проекра на существование БД
+	if _, err := os.Stat(s.DBPath); os.IsNotExist(err) {
+		return "", fmt.Errorf("Файл БД не найден: %s", s.DBPath)
+	}
+
+	// Копируем файл
+	srcFile, err := os.Open(s.DBPath)
+	if err != nil {
+		return "", fmt.Errorf("Ошибка открытия исходной БД: %w", err)
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(fullPath)
+	if err != nil {
+		return "", fmt.Errorf("ошибка создания бэкапа: %w", err)
+	}
+	// Обработка ошибки записи в файл
+	var createErr error
+    defer func() {
+        if closeErr := dstFile.Close(); closeErr != nil && createErr == nil {
+            createErr = fmt.Errorf("failed to close file: %w", closeErr)
+        }
+        if createErr != nil {
+            os.Remove(fullPath)  // Удаляем битый файл
+        }
+    }()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return "", fmt.Errorf("Ошибка копирования: %w", err)
+	}
+
+	return fullPath, nil
+}
