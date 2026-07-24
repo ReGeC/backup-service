@@ -1,6 +1,8 @@
 package config
 
 type PostgresConfig struct {
+	PGEnable bool
+
 	PGHost string
 	PGPort int
 	PGUser string
@@ -8,7 +10,12 @@ type PostgresConfig struct {
 	PGDatabase string
 }
 
-func (p *PostgresConfig) LoadConfig() error {
+func (p *PostgresConfig) LoadConfig() (bool, error) {
+	p.PGEnable = getEnvAsBool("PG_ENABLE", false)
+	if !p.PGEnable {
+		return false, nil
+	} 
+
 	p.PGHost = getEnv("PG_HOST", "localhost")
 	p.PGPort = getEnvAsInt("PG_PORT", 5432)
 	p.PGUser = getEnv("PG_USER", "postgres")
@@ -17,7 +24,7 @@ func (p *PostgresConfig) LoadConfig() error {
 
 	err := p.ValidateConfig()
 
-	return err
+	return true, err
 }
 
 // TODO Валидация конфига
@@ -25,8 +32,8 @@ func (p *PostgresConfig) ValidateConfig() error {
 	return nil;
 }
 
-func NewPostgresConfig() (*PostgresConfig, error) {
+func NewPostgresConfig() (*PostgresConfig, bool, error) {
 	postgresCfg := &PostgresConfig{}
-	err := postgresCfg.LoadConfig()
-	return postgresCfg, err
+	enabled, err := postgresCfg.LoadConfig()
+	return postgresCfg, enabled, err
 }

@@ -9,6 +9,21 @@ import (
 	"backup-service/internal/config"
 )
 
+const Postgres BackupType = "postgres"
+
+func init() {
+	cfg, enabled, err := config.NewPostgresConfig()
+	if enabled {
+		// Автоматическая регистрация при импорте
+		Register(Postgres, func() (Backupper, error) {
+			if err != nil {
+				return nil, fmt.Errorf("Неверная конфигурация для PostgreSQL: %w", err)
+			}
+			return NewPostgresBackupFromConfig(cfg), nil
+		})
+	}
+}
+
 type PostgresBackup struct {
 	Host string
 	Port int

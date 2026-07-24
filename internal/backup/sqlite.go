@@ -9,6 +9,21 @@ import (
 	"backup-service/internal/config"
 )
 
+const SQLite BackupType = "sqlite"
+
+func init() {
+	// Автоматическая регистрация при импорте
+	cfg, enabled, err := config.NewSQLiteConfig()
+	if enabled {
+		Register(SQLite, func() (Backupper, error) {
+			if err != nil {
+				return nil, fmt.Errorf("Неверная конфигурация для SQLite: %w", err)
+			}
+			return NewSQLiteBackupFromConfig(cfg), nil
+		})
+	}
+}
+
 type SQLiteBackup struct {
 	DBPath string
 }
