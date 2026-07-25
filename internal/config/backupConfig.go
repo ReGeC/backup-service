@@ -9,7 +9,7 @@ type BackupConfig struct {
 
 func (b *BackupConfig) LoadConfig() error {
 	b.StorageType = getEnv("BACKUP_STORAGE", "local")
-	b.BackupPath = getEnv("BACKUP_PATH", "./backups")
+	b.BackupPath = getEnv("BACKUP_TEMP_PATH", "./tmp/backups")
 	b.RetentionDays = getEnvAsInt("BACKUP_RETENTION_DAYS", 7)
 	b.BackupSchedule = getEnv("BACKUP_SCHEDULE", "0 3 * * *")
 
