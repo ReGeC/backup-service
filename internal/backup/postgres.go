@@ -94,6 +94,7 @@ func (p *PostgresBackup) Create(outputDir string) (string, error) {
         if createErr != nil {
             os.Remove(fullPath)  // Удаляем битый файл
         }
+		// TODO добавить логирование и обработку ошибок
     }()
 
 	// Пишем вывод pg_dump в файл через gzip

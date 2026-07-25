@@ -70,6 +70,7 @@ func (s *SQLiteBackup) Create(outputDir string) (string, error) {
         if createErr != nil {
             os.Remove(fullPath)  // Удаляем битый файл
         }
+		// TODO Добавить обработку ошибок
     }()
 
 	_, err = io.Copy(dstFile, srcFile)
