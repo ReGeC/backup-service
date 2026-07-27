@@ -4,34 +4,43 @@ import (
 	"log"
 	"os"
 	"strconv"
+
 	"github.com/joho/godotenv"
 )
 
-func init() {
-    if err := godotenv.Load(".env"); err != nil {
-        log.Println(".env файл не найден, используются переменные по умолчанию")
-    }
+type ConfigLoader interface {
+	GetEnv(key, defaultValue string) string
+	GetEnvAsInt(key string, defaulValue int) int
+	GetEnvAsBool(key string, defaultValue bool) bool
 }
 
-func getEnv(key, defaultValue string) string {
+type EnvLoader struct{}
+
+func init() {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println(".env файл не найден, используются переменные по умолчанию")
+	}
+}
+
+func (e *EnvLoader) GetEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); value != "" && exists {
 		return value
 	}
 	return defaultValue
 }
 
-func getEnvAsInt(key string, defaultValue int) int {
-	strValue := getEnv(key, "")
+func (e *EnvLoader) GetEnvAsInt(key string, defaultValue int) int {
+	strValue := e.GetEnv(key, "")
 	if value, err := strconv.Atoi(strValue); err == nil {
-		return value;
+		return value
 	}
 	return defaultValue
 }
 
-func getEnvAsBool(key string, defaultValue bool) bool {
-	strValue := getEnv(key, "")
+func (e *EnvLoader) GetEnvAsBool(key string, defaultValue bool) bool {
+	strValue := e.GetEnv(key, "")
 	if value, err := strconv.ParseBool(strValue); err == nil {
-		return value;
+		return value
 	}
 	return defaultValue
 }

@@ -1,20 +1,22 @@
 package config
 
 type BackupConfig struct {
-	StorageType string
-	BackupPath string
+	loader ConfigLoader
+
+	StorageType   string
+	BackupPath    string
 	RetentionDays int
 
-	CronEnable bool
+	CronEnable     bool
 	BackupSchedule string
 }
 
 func (b *BackupConfig) LoadConfig() error {
-	b.StorageType = getEnv("BACKUP_STORAGE", "local")
-	b.BackupPath = getEnv("BACKUP_TEMP_PATH", "./tmp/backups")
-	b.RetentionDays = getEnvAsInt("BACKUP_RETENTION_DAYS", 7)
-	b.CronEnable = getEnvAsBool("CRON_ENABLE", false)
-	b.BackupSchedule = getEnv("BACKUP_SCHEDULE", "0 3 * * *")
+	b.StorageType = b.loader.GetEnv("BACKUP_STORAGE", "local")
+	b.BackupPath = b.loader.GetEnv("BACKUP_TEMP_PATH", "./tmp/backups")
+	b.RetentionDays = b.loader.GetEnvAsInt("BACKUP_RETENTION_DAYS", 7)
+	b.CronEnable = b.loader.GetEnvAsBool("CRON_ENABLE", false)
+	b.BackupSchedule = b.loader.GetEnv("BACKUP_SCHEDULE", "0 3 * * *")
 
 	err := b.ValidateConfig()
 
@@ -23,11 +25,15 @@ func (b *BackupConfig) LoadConfig() error {
 
 // TODO Валидация конфига
 func (b *BackupConfig) ValidateConfig() error {
-	return nil;
+	return nil
 }
 
 func NewBackupConfig() (*BackupConfig, error) {
-	backupCfg := &BackupConfig{}
+	return NewBackupConfigWithLoader(&EnvLoader{})
+}
+
+func NewBackupConfigWithLoader(loader ConfigLoader) (*BackupConfig, error) {
+	backupCfg := &BackupConfig{loader: loader}
 	err := backupCfg.LoadConfig()
 	return backupCfg, err
 }
