@@ -4,6 +4,8 @@ type BackupConfig struct {
 	StorageType string
 	BackupPath string
 	RetentionDays int
+
+	CronEnable bool
 	BackupSchedule string
 }
 
@@ -11,6 +13,7 @@ func (b *BackupConfig) LoadConfig() error {
 	b.StorageType = getEnv("BACKUP_STORAGE", "local")
 	b.BackupPath = getEnv("BACKUP_TEMP_PATH", "./tmp/backups")
 	b.RetentionDays = getEnvAsInt("BACKUP_RETENTION_DAYS", 7)
+	b.CronEnable = getEnvAsBool("CRON_ENABLE", false)
 	b.BackupSchedule = getEnv("BACKUP_SCHEDULE", "0 3 * * *")
 
 	err := b.ValidateConfig()
