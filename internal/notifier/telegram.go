@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const Telegram NotifierType = "telegram"
+const Telegram = "telegram"
 
 func init() {
 	cfg, enabled, err := config.NewTelegramConfig()

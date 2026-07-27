@@ -21,6 +21,8 @@ func main() {
 
 	log.Println("Сервис Бекапов запущен")
 
+	st, err := storage.NewStorage(storage.StorageType(cfg.StorageType))
+
 	// Инициализация бэкапов
 	backuppers := backup.InitBackuppers()
 

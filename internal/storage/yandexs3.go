@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-const YandexS3 StorageType = "yandex_s3"
+const YandexS3 = "yandex_s3"
 
 func init() {
 	cfg, enabled, err := config.NewYandexS3Config()

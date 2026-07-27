@@ -7,8 +7,6 @@ import (
 	"sync"
 )
 
-type StorageType string
-
 type Storage interface {
 	Save(ctx context.Context, localPath string) (string, error)
 	List(ctx context.Context) ([]FileInfo, error)
@@ -22,22 +20,22 @@ type FileInfo struct {
 }
 
 
-var registry = map[StorageType]func() (Storage, error){}
+var registry = map[string]func() (Storage, error){}
 var mu sync.RWMutex
 
-func Register(storageType StorageType, factory func() (Storage, error)) {
+func Register(typ string, factory func() (Storage, error)) {
 	mu.Lock()
 	defer mu.Unlock()
-	registry[storageType] = factory
+	registry[typ] = factory
 }
 
-func NewStorage(storageType StorageType) (Storage, error) {
+func NewStorage(typ string) (Storage, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	factory, exists := registry[storageType]
+	factory, exists := registry[typ]
 	if !exists {
-		return nil, fmt.Errorf("неизвестный тип хранилища: %s", storageType)
+		return nil, fmt.Errorf("неизвестный тип хранилища: %s", typ)
 	}
 	return factory()
 }

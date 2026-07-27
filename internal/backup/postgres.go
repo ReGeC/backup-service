@@ -9,7 +9,7 @@ import (
 	"backup-service/internal/config"
 )
 
-const Postgres BackupType = "postgres"
+const Postgres = "postgres"
 
 func init() {
 	cfg, enabled, err := config.NewPostgresConfig()

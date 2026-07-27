@@ -6,23 +6,21 @@ import (
 	"sync"
 )
 
-type NotifierType string
-
 type Notifier interface {
 	// Функция отправки уведомлений
 	Send (ctx context.Context, message string) error
 }
 
-var registry = map[NotifierType]func() (Notifier, error){}
+var registry = map[string]func() (Notifier, error){}
 var mu sync.RWMutex
 
-func Register(typ NotifierType, factory func() (Notifier, error)) {
+func Register(typ string, factory func() (Notifier, error)) {
 	mu.Lock()
 	defer mu.Unlock()
 	registry[typ] = factory
 }
 
-func NewNotifier(typ NotifierType) (Notifier, error) {
+func NewNotifier(typ string) (Notifier, error) {
 	mu.RLock()
 	defer mu.RUnlock()
 

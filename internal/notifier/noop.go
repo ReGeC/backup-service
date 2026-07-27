@@ -3,7 +3,7 @@ package notifier
 
 import "context"
 
-const Noop NotifierType = "noop"
+const Noop = "noop"
 
 func init() {
 	Register(Noop, func() (Notifier, error) {

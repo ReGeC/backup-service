@@ -9,7 +9,7 @@ import (
 	"backup-service/internal/config"
 )
 
-const SQLite BackupType = "sqlite"
+const SQLite = "sqlite"
 
 func init() {
 	// Автоматическая регистрация при импорте

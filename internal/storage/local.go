@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const Local StorageType = "local"
+const Local = "local"
 
 func init() {
 	cfg, enabled, err := config.NewLocalConfig()

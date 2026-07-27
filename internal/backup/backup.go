@@ -15,46 +15,44 @@ type Backupper interface {
 	Create(outputDir string) (string, error)
 }
 
-type BackupType string
-
 // Глобальная хешмапа регистра
-var registry = make(map[BackupType]func() (Backupper, error))
+var registry = make(map[string]func() (Backupper, error))
 var mu sync.RWMutex
 
 // Register регистрирует фабрику для создания бэкаппера
-func Register(backupType BackupType, factory func() (Backupper, error)) {
+func Register(typ string, factory func() (Backupper, error)) {
 	mu.Lock()
 	defer mu.Unlock()
-	registry[backupType] = factory
+	registry[typ] = factory
 }
 
-func InitBackuppers() map[BackupType]Backupper {
-	backuppers := make(map[BackupType]Backupper)
+func InitBackuppers() map[string]Backupper {
+	backuppers := make(map[string]Backupper)
 
-	for backupType := range registry {
-		backupper, err := NewBackupper(backupType)
+	for typ := range registry {
+		backupper, err := NewBackupper(typ)
 		if err != nil {
-			log.Printf("Ошибка инициализации %s: %v", backupType, err)
+			log.Printf("Ошибка инициализации %s: %v", typ, err)
 			continue
 		}
-		backuppers[backupType] = backupper
+		backuppers[typ] = backupper
 	}
 
 	return backuppers
 }
 
-func RunBackuppers(backuppers map[BackupType]Backupper, outputDir string, storageType string) {
-	for backupType, backupper := range backuppers {
-		log.Printf("Создание бэкапа %s\n", backupType)
+func RunBackuppers(backuppers map[string]Backupper, outputDir string, storageType string) {
+	for typ, backupper := range backuppers {
+		log.Printf("Создание бэкапа %s\n", typ)
 		startTime := time.Now()
 
 		filePath, err := backupper.Create(outputDir)
 		if err != nil {
-			log.Printf("Ошибка создания бэкапа %s: %v", backupType, err)
+			log.Printf("Ошибка создания бэкапа %s: %v", typ, err)
 
 			// Логируем ошибку в БД
 			logEntry := &models.BackupLog{
-				Name:    string(backupType) + "_backup",
+				Name:    string(typ) + "_backup",
 				Size:    0,
 				Storage: storageType,
 				Status:  "failed",
@@ -82,7 +80,7 @@ func RunBackuppers(backuppers map[BackupType]Backupper, outputDir string, storag
 
 			elapsed := time.Since(startTime)
 			log.Printf("Бэкап %s создан: %s (размер: неизвестен, время: %v)",
-				backupType, filePath, elapsed)
+				typ, filePath, elapsed)
 			continue
 		}
 
@@ -95,23 +93,23 @@ func RunBackuppers(backuppers map[BackupType]Backupper, outputDir string, storag
 		}
 
 		if result := storage.GetDB().Create(logEntry); result.Error != nil {
-			log.Printf("Ошибка сохранения лога для %s: %v", backupType, result.Error)
+			log.Printf("Ошибка сохранения лога для %s: %v", typ, result.Error)
 			// Не прерываем выполнение, бэкап уже создан
 		}
 
 		elapsed := time.Since(startTime)
 		log.Printf("Бэкап %s создан: %s (размер: %.2f MB, время: %v)",
-			backupType, filePath, float64(fileInfo.Size())/1024/1024, elapsed)
+			typ, filePath, float64(fileInfo.Size())/1024/1024, elapsed)
 	}
 }
 
-func NewBackupper(backupType BackupType) (Backupper, error) {
+func NewBackupper(typ string) (Backupper, error) {
 	mu.RLock()
 	defer mu.RUnlock()
 	
-	factory, exists := registry[backupType]
+	factory, exists := registry[typ]
 	if !exists {
-		return nil, fmt.Errorf("Неподдерживаемый тип бэкапа: %s", backupType)
+		return nil, fmt.Errorf("Неподдерживаемый тип бэкапа: %s", typ)
 	}
 	return factory()
 }
