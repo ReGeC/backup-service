@@ -41,66 +41,68 @@ func InitBackuppers() map[string]Backupper {
 	return backuppers
 }
 
-func RunBackuppers(backuppers map[string]Backupper, outputDir string, storageType string) {
-	for typ, backupper := range backuppers {
-		log.Printf("Создание бэкапа %s\n", typ)
-		startTime := time.Now()
 
-		filePath, err := backupper.Create(outputDir)
-		if err != nil {
-			log.Printf("Ошибка создания бэкапа %s: %v", typ, err)
+func RunBackup(typ string, backupper Backupper, outputDir string, storageType string) (string, error) {
+	log.Printf("Создание бэкапа %s\n", typ)
+	startTime := time.Now()
 
-			// Логируем ошибку в БД
-			logEntry := &models.BackupLog{
-				Name:    string(typ) + "_backup",
-				Size:    0,
-				Storage: storageType,
-				Status:  "failed",
-				Error:   err.Error(),
-			}
-			storage.GetDB().Create(logEntry)
+	filePath, err := backupper.Create(outputDir)
+	if err != nil {
+		log.Printf("Ошибка создания бэкапа %s: %v", typ, err)
 
-			continue
+		// Логируем ошибку в БД
+		logEntry := &models.BackupLog{
+			Name:    typ + "_backup",
+			Size:    0,
+			Storage: storageType,
+			Status:  "failed",
+			Error:   err.Error(),
 		}
+		storage.GetDB().Create(logEntry)
 
-		// Получаем размер файла
-		fileInfo, err := os.Stat(filePath)
-		if err != nil {
-			log.Printf("Не удалось получить размер файла %s: %v", filePath, err)
+		return "", err
+	}
 
-			// Логируем с размером 0, но статус success (бэкап-то создан)
-			logEntry := &models.BackupLog{
-				Name:    filePath,
-				Size:    0,
-				Storage: storageType,
-				Status:  "success",
-				Error:   "не удалось получить размер файла: " + err.Error(),
-			}
-			storage.GetDB().Create(logEntry)
+	// Получаем размер файла
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		log.Printf("Не удалось получить размер файла %s: %v", filePath, err)
 
-			elapsed := time.Since(startTime)
-			log.Printf("Бэкап %s создан: %s (размер: неизвестен, время: %v)",
-				typ, filePath, elapsed)
-			continue
-		}
-
-		// Сохраняем в лог успешный бэкап с размером
+		// Логируем с размером 0, но статус success (бэкап-то создан)
 		logEntry := &models.BackupLog{
 			Name:    filePath,
-			Size:    fileInfo.Size(),
+			Size:    0,
 			Storage: storageType,
 			Status:  "success",
+			Error:   "не удалось получить размер файла: " + err.Error(),
 		}
-
-		if result := storage.GetDB().Create(logEntry); result.Error != nil {
-			log.Printf("Ошибка сохранения лога для %s: %v", typ, result.Error)
-			// Не прерываем выполнение, бэкап уже создан
-		}
+		storage.GetDB().Create(logEntry)
 
 		elapsed := time.Since(startTime)
-		log.Printf("Бэкап %s создан: %s (размер: %.2f MB, время: %v)",
-			typ, filePath, float64(fileInfo.Size())/1024/1024, elapsed)
+		log.Printf("Бэкап %s создан: %s (размер: неизвестен, время: %v)",
+			typ, filePath, elapsed)
+
+		return filePath, nil // файл создан, возвращаем путь
 	}
+
+	// Сохраняем в лог успешный бэкап с размером
+	logEntry := &models.BackupLog{
+		Name:    filePath,
+		Size:    fileInfo.Size(),
+		Storage: storageType,
+		Status:  "success",
+	}
+
+	if result := storage.GetDB().Create(logEntry); result.Error != nil {
+		log.Printf("Ошибка сохранения лога для %s: %v", typ, result.Error)
+		// Не прерываем выполнение, бэкап уже создан
+	}
+
+	elapsed := time.Since(startTime)
+	log.Printf("Бэкап %s создан: %s (размер: %.2f MB, время: %v)",
+		typ, filePath, float64(fileInfo.Size())/1024/1024, elapsed)
+
+	return filePath, nil
 }
 
 func NewBackupper(typ string) (Backupper, error) {

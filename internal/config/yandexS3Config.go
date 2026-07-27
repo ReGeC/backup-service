@@ -1,8 +1,6 @@
 package config
 
 type YandexS3Config struct {
-	S3Enable bool
-
 	S3Endpoint string
 	S3Bucket string
 	S3Region string
@@ -11,11 +9,8 @@ type YandexS3Config struct {
 }
 
 func (s *YandexS3Config) LoadConfig() (bool, error) {
-	s.S3Enable = getEnvAsBool("YANDEX_S3_ENABLE", false)
-	if !s.S3Enable {
-		return false, nil
-	}
-
+	// Не добаляем Enable, так как хранилище выбирается только одно
+	// а не подключается как модуль
 	s.S3Endpoint = getEnv("YANDEX_S3_ENDPOINT", "https://storage.yandexcloud.net")
 	s.S3Bucket = getEnv("YANDEX_S3_BUCKET", "")
 	s.S3Region = getEnv("YANDEX_S3_REGION", "ru-central1")

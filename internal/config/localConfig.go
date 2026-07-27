@@ -1,13 +1,12 @@
 package config
 
 type LocalConfig struct {
-	LocalStorageEnable bool
 	LocalStoragePath   string
 }
 
 func (l *LocalConfig) LoadConfig() (bool, error) {
-	l.LocalStorageEnable = getEnvAsBool("LOCAL_STORAGE_ENABLE", false)
-
+	// Не добаляем Enable, так как хранилище выбирается только одно
+	// а не подключается как модуль
 	l.LocalStoragePath = getEnv("LOCAL_STORAGE_PATH", "./backups")
 
 	err := l.ValidateConfig()

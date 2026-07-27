@@ -21,6 +21,10 @@ func init() {
 			}
 			return NewTelegramNotifier(cfg), nil
 		})
+	} else {
+		Register(Noop, func() (Notifier, error) {
+			return &NoopNotifier{}, nil
+		})
 	}
 }
 

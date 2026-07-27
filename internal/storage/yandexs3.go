@@ -16,15 +16,13 @@ import (
 const YandexS3 = "yandex_s3"
 
 func init() {
-	cfg, enabled, err := config.NewYandexS3Config()
-	if enabled {
-		Register(YandexS3, func() (Storage, error) {
-			if err != nil {
-				return nil, fmt.Errorf("Неверная конфигурация для s3: %w", err)
-			}
-			return NewYandexS3Storage(cfg)
-		})
-	}
+	Register(YandexS3, func() (Storage, error) {
+		cfg, _, err := config.NewYandexS3Config()
+		if err != nil {
+			return nil, fmt.Errorf("Неверная конфигурация для s3: %w", err)
+		}
+		return NewYandexS3Storage(cfg)
+	})
 }
 
 type YandexS3Storage struct {

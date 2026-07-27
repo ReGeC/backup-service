@@ -13,15 +13,13 @@ import (
 const Local = "local"
 
 func init() {
-	cfg, enabled, err := config.NewLocalConfig()
-	if enabled {
-		Register(Local, func() (Storage, error) {
-			if err != nil {
-				return nil, fmt.Errorf("Неверная конфигурация для PostgreSQL: %w", err)
-			}
-			return NewLocalStorage(cfg.LocalStoragePath), nil
-		})
-	}
+	Register(Local, func() (Storage, error) {
+		cfg, _, err := config.NewLocalConfig()
+		if err != nil {
+			return nil, fmt.Errorf("Неверная конфигурация для PostgreSQL: %w", err)
+		}
+		return NewLocalStorage(cfg.LocalStoragePath), nil
+	})
 }
 
 type LocalStorage struct {
