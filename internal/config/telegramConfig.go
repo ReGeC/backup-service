@@ -1,5 +1,12 @@
 package config
 
+import "errors"
+
+var (
+	ErrEmptyTelegramBotToken = errors.New("telegram bot token is empty")
+	ErrEmptyTelegramChatID = errors.New("telegram chat id is empty")
+)
+
 type TelegramConfig struct {
 	loader ConfigLoader
 
@@ -18,13 +25,17 @@ func (t *TelegramConfig) LoadConfig() (bool, error) {
 	t.TelegramBotToken = t.loader.GetEnv("TELEGRAM_BOT_TOKEN", "")
 	t.TelegramChatID = t.loader.GetEnv("TELEGRAM_CHAT_ID", "")
 
-	err := t.ValidateConfig()
-
-	return true, err
+	return true, t.ValidateConfig()
 }
 
-// TODO Валидация конфига
 func (t *TelegramConfig) ValidateConfig() error {
+	if t.TelegramBotToken == "" {
+		return ErrEmptyTelegramBotToken
+	}
+	if t.TelegramChatID == "" {
+		return ErrEmptyTelegramChatID
+	}
+
 	return nil
 }
 

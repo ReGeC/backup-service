@@ -1,5 +1,9 @@
 package config
 
+import (
+	"errors"
+)
+
 type BackupConfig struct {
 	loader ConfigLoader
 
@@ -11,6 +15,14 @@ type BackupConfig struct {
 	BackupSchedule string
 }
 
+var (
+	ErrEmptyBackupPath = errors.New("backup path is empty")
+	ErrInvalidRetention = errors.New("retention days must be greater than 0")
+	ErrEmptySchedule = errors.New("backup schedule is empty")
+)
+
+
+
 func (b *BackupConfig) LoadConfig() error {
 	b.StorageType = b.loader.GetEnv("BACKUP_STORAGE", "local")
 	b.BackupPath = b.loader.GetEnv("BACKUP_TEMP_PATH", "./tmp/backups")
@@ -18,13 +30,20 @@ func (b *BackupConfig) LoadConfig() error {
 	b.CronEnable = b.loader.GetEnvAsBool("CRON_ENABLE", false)
 	b.BackupSchedule = b.loader.GetEnv("BACKUP_SCHEDULE", "0 3 * * *")
 
-	err := b.ValidateConfig()
-
-	return err
+	return b.ValidateConfig()
 }
 
-// TODO Валидация конфига
 func (b *BackupConfig) ValidateConfig() error {
+	if b.BackupPath == "" {
+		return ErrEmptyBackupPath
+	}
+	if b.RetentionDays <= 0 {
+		return ErrInvalidRetention
+	}
+	if b.CronEnable && b.BackupSchedule == "" {
+		return ErrEmptySchedule
+	}
+
 	return nil
 }
 

@@ -1,5 +1,9 @@
 package config
 
+import "errors"
+
+var ErrEmptySQLitePath = errors.New("sqlite path is empty")
+
 type SQLiteConfig struct {
 	loader ConfigLoader
 
@@ -15,15 +19,19 @@ func (s *SQLiteConfig) LoadConfig() (bool, error) {
 	}
 
 	s.SQLitePath = s.loader.GetEnv("SQLITE_PATH", "./test.db")
-	err := s.ValidateConfig()
 
-	return true, err
+	return true, s.ValidateConfig()
+
 }
 
-// TODO Валидация конфига
 func (s *SQLiteConfig) ValidateConfig() error {
+	if s.SQLitePath == "" {
+		return ErrEmptySQLitePath
+	}
+
 	return nil
 }
+
 
 func NewSQLiteConfig() (*SQLiteConfig, bool, error) {
 	return NewSQLiteConfigWithLoader(&EnvLoader{})

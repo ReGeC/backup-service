@@ -1,5 +1,9 @@
 package config
 
+import "errors"
+
+var ErrEmptyLocalStoragePath = errors.New("local storage path is empty")
+
 type LocalConfig struct {
 	loader ConfigLoader
 
@@ -9,15 +13,21 @@ type LocalConfig struct {
 func (l *LocalConfig) LoadConfig() (bool, error) {
 	// Не добаляем Enable, так как хранилище выбирается только одно
 	// а не подключается как модуль
+	// Оставлено конструкция как у других конфигов на будущее, если вдруг потребуется
 	l.LocalStoragePath = l.loader.GetEnv("LOCAL_STORAGE_PATH", "./backups")
 
-	err := l.ValidateConfig()
+	if err := l.ValidateConfig(); err != nil {
+		return false, err
+	}
 
-	return true, err
+	return true, nil
 }
 
-// TODO Валидация конфига
 func (l *LocalConfig) ValidateConfig() error {
+	if l.LocalStoragePath == "" {
+		return ErrEmptyLocalStoragePath
+	}
+
 	return nil
 }
 
