@@ -1,0 +1,51 @@
+# Binaries
+/cmd/*/main
+/cmd/*/*.exe
+/cmd/*/*.dll
+/cmd/*/*.so
+/cmd/*/*.dylib
+
+# Internal build artifacts (если компилишь внутрь)
+/internal/**/*.test
+/internal/**/*.out
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# DB files (ты сказал не надо)
+*.db
+*.sqlite
+*.sqlite3
+
+# Coverage (ты сказал не надо)
+coverage.out
+coverage.html
+*.out
+
+# Mockery (генерится, не храним)
+mocks/
+*.mock.go
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Temp
+/tmp/
+/temp/
+*.tmp
+
+# Backups (ты сказал не надо)
+/backups/
+*.bak
+*.backup
