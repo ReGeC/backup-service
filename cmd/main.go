@@ -8,9 +8,15 @@ import (
 	"backup-service/internal/config"
 	"backup-service/internal/storage"
 	"backup-service/internal/notifier"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println(".env файл не найден, используются переменные по умолчанию")
+	}
+
 	cfg, err := config.NewBackupConfig()
 	if err != nil {
 		log.Fatal("Ошибка конфигурационного файла: ", err)

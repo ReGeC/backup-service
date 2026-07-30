@@ -1,11 +1,8 @@
 package config
 
 import (
-	"log"
 	"os"
 	"strconv"
-
-	"github.com/joho/godotenv"
 )
 
 type ConfigLoader interface {
@@ -15,12 +12,6 @@ type ConfigLoader interface {
 }
 
 type EnvLoader struct{}
-
-func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(".env файл не найден, используются переменные по умолчанию")
-	}
-}
 
 func (e *EnvLoader) GetEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
