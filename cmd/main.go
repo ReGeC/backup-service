@@ -7,6 +7,7 @@ import (
 	"backup-service/internal/backup"
 	"backup-service/internal/config"
 	"backup-service/internal/storage"
+	"backup-service/internal/storage/database"
 	"backup-service/internal/notifier"
 
 	"github.com/joho/godotenv"
@@ -22,7 +23,7 @@ func main() {
 		log.Fatal("Ошибка конфигурационного файла: ", err)
 	}
 
-	err = storage.InitDB()
+	db, err := database.InitDB()
 	if err != nil {
 		log.Fatal("Ошибка инициализации БД: ", err)
 	}
@@ -41,11 +42,13 @@ func main() {
 	// Инициализация бэкапов
 	backuppers := backup.InitBackuppers()
 
+	backupLogRepository := database.NewGormBackupLogRepository(db)
+
 	ctx := context.Background()
 
 	for typ, backupper := range backuppers {
 		// Создание бэкапа
-		localPath, err := backup.RunBackup(typ, backupper, cfg.BackupPath, cfg.StorageType)
+		localPath, err := backup.RunBackup(typ, backupper, backupLogRepository, cfg.BackupPath, cfg.StorageType)
 		if err != nil {
 			msg := "Ошибка создания бэкапа " + typ + ": " + err.Error()
 			notifier.SendAll(notifiers, ctx, msg)

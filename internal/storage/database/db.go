@@ -1,4 +1,4 @@
-package storage
+package database
 
 import (
 	"backup-service/internal/models"
@@ -8,24 +8,18 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func InitDB() error {
+func InitDB() (*gorm.DB, error) {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("backup_service.db"), &gorm.Config{})
+	DB, err := gorm.Open(sqlite.Open("backup_service.db"), &gorm.Config{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = DB.AutoMigrate(&models.BackupLog{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Println("База данных подключена")
-	return nil
-}
-
-func GetDB() *gorm.DB {
-	return DB
+	return DB, nil
 }
