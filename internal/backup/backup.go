@@ -6,10 +6,12 @@ import (
 	"sync"
 	"time"
 	"os"
-
+	"errors"
 
 	"backup-service/internal/models"
 )
+
+var ErrBackupCreation = errors.New("backup creation failed")
 
 //go:generate mockery
 type Backupper interface {
@@ -30,6 +32,13 @@ func Register(typ string, factory func() (Backupper, error)) {
 	mu.Lock()
 	defer mu.Unlock()
 	registry[typ] = factory
+}
+
+func ResetRegistry() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	registry = make(map[string]func() (Backupper, error))
 }
 
 func InitBackuppers() map[string]Backupper {
@@ -74,7 +83,7 @@ func RunBackup(typ string, backupper Backupper, repository BackupLogRepository, 
 			Error:   err.Error(),
 		}, typ)
 
-		return "", err
+		return "", fmt.Errorf("%w: %w", ErrBackupCreation, err)
 	}
 
 	// Получаем размер файла

@@ -26,3 +26,8 @@ packages:
   backup-service/internal/config:
     interfaces:
       ConfigLoader: {}
+      
+  backup-service/internal/backup:
+    interfaces:
+      Backupper: {}
+      BackupLogRepository: {}
