@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+//go:generate mockery
 type ConfigLoader interface {
 	GetEnv(key, defaultValue string) string
 	GetEnvAsInt(key string, defaulValue int) int
