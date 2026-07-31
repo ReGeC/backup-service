@@ -52,7 +52,7 @@ func NewPostgresBackupFromConfig(cfg *config.PostgresConfig) *PostgresBackup {
     }
 }
 
-func (p *PostgresBackup) Create(outputDir string) (string, error) {
+func (p *PostgresBackup) CreateBackup(outputDir string) (fullPath string, err error) {
 	// Проверка, что pg_dump и gzip установлены
 	if _, err := exec.LookPath("pg_dump"); err != nil {
 	    return "", fmt.Errorf("pg_dump not found: %w", err)
@@ -64,7 +64,7 @@ func (p *PostgresBackup) Create(outputDir string) (string, error) {
 	// Формирум имя файла: db_2026-07-10_15-30.sql.gz
 	timestamp := time.Now().Format("2006-01-02_15-04")
 	filename := fmt.Sprintf("db_%s.sql.gz", timestamp)
-	fullPath := filepath.Join(outputDir, filename)
+	fullPath = filepath.Join(outputDir, filename)
 
 	// Команда pg_dump
 	// pg_dump -h localhost -p 5432 -U postgres -d testdb | gzip > backup.sql.gz
@@ -83,19 +83,18 @@ func (p *PostgresBackup) Create(outputDir string) (string, error) {
 	// Создаем файл для записи
 	file, err := os.Create(fullPath)
 	if err != nil {
-		return "", fmt.Errorf("Ошибка создания файла: %w", err)
+	    return "", fmt.Errorf("Ошибка создания файла: %w", err)
 	}
 	// Обработка ошибки записи в файл
-	var createErr error
-    defer func() {
-        if closeErr := file.Close(); closeErr != nil && createErr == nil {
-            createErr = fmt.Errorf("failed to close file: %w", closeErr)
-        }
-        if createErr != nil {
-            os.Remove(fullPath)  // Удаляем битый файл
-        }
-		// TODO добавить логирование и обработку ошибок
-    }()
+	defer func() {
+	    if closeErr := file.Close(); err == nil && closeErr != nil {
+	        err = fmt.Errorf("ошибка закрытия файла: %w", closeErr)
+	    }
+
+	    if err != nil {
+	        _ = os.Remove(fullPath)
+	    }
+	}()
 
 	// Пишем вывод pg_dump в файл через gzip
 	gzipCmd := exec.Command("gzip")

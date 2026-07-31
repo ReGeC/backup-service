@@ -40,10 +40,10 @@ func NewSQLiteBackupFromConfig(cfg *config.SQLiteConfig) *SQLiteBackup {
     }
 }
 
-func (s *SQLiteBackup) Create(outputDir string) (string, error) {
+func (s *SQLiteBackup) CreateBackup(outputDir string) (fullPath string, err error) {
 	timestamp := time.Now().Format("2006-01-02_15-04")
 	filename := fmt.Sprintf("sqlite_%s.db.bak", timestamp)
-	fullPath := filepath.Join(outputDir, filename)
+	fullPath = filepath.Join(outputDir, filename)
 
 	// Проекра на существование БД
 	if _, err := os.Stat(s.DBPath); os.IsNotExist(err) {
@@ -59,19 +59,18 @@ func (s *SQLiteBackup) Create(outputDir string) (string, error) {
 
 	dstFile, err := os.Create(fullPath)
 	if err != nil {
-		return "", fmt.Errorf("ошибка создания бэкапа: %w", err)
+	    return "", fmt.Errorf("ошибка создания бэкапа: %w", err)
 	}
 	// Обработка ошибки записи в файл
-	var createErr error
-    defer func() {
-        if closeErr := dstFile.Close(); closeErr != nil && createErr == nil {
-            createErr = fmt.Errorf("failed to close file: %w", closeErr)
-        }
-        if createErr != nil {
-            os.Remove(fullPath)  // Удаляем битый файл
-        }
-		// TODO Добавить обработку ошибок
-    }()
+	defer func() {
+	    if closeErr := dstFile.Close(); err == nil && closeErr != nil {
+	        err = fmt.Errorf("ошибка закрытия файла: %w", closeErr)
+	    }
+
+	    if err != nil {
+	        _ = os.Remove(fullPath)
+	    }
+	}()
 
 	_, err = io.Copy(dstFile, srcFile)
 	if err != nil {

@@ -7,12 +7,18 @@ import (
 	"time"
 	"os"
 
-	"backup-service/internal/storage"
+
 	"backup-service/internal/models"
 )
 
+//go:generate mockery
 type Backupper interface {
-	Create(outputDir string) (string, error)
+	CreateBackup(outputDir string) (string, error)
+}
+
+//go:generate mockery
+type BackupLogRepository interface {
+    Create(*models.BackupLog) error
 }
 
 // Глобальная хешмапа регистра
@@ -41,24 +47,32 @@ func InitBackuppers() map[string]Backupper {
 	return backuppers
 }
 
+func saveBackupLog(
+	repository BackupLogRepository,
+	logEntry *models.BackupLog,
+	backupType string,
+) {
+	if err := repository.Create(logEntry); err != nil {
+		log.Printf("Ошибка сохранения лога для %s: %v", backupType, err)
+	}
+}
 
-func RunBackup(typ string, backupper Backupper, outputDir string, storageType string) (string, error) {
+func RunBackup(typ string, backupper Backupper, repository BackupLogRepository, outputDir string, storageType string) (string, error) {
 	log.Printf("Создание бэкапа %s\n", typ)
 	startTime := time.Now()
 
-	filePath, err := backupper.Create(outputDir)
+	filePath, err := backupper.CreateBackup(outputDir)
 	if err != nil {
 		log.Printf("Ошибка создания бэкапа %s: %v", typ, err)
 
 		// Логируем ошибку в БД
-		logEntry := &models.BackupLog{
+		saveBackupLog(repository, &models.BackupLog{
 			Name:    typ + "_backup",
 			Size:    0,
 			Storage: storageType,
 			Status:  "failed",
 			Error:   err.Error(),
-		}
-		storage.GetDB().Create(logEntry)
+		}, typ)
 
 		return "", err
 	}
@@ -68,15 +82,14 @@ func RunBackup(typ string, backupper Backupper, outputDir string, storageType st
 	if err != nil {
 		log.Printf("Не удалось получить размер файла %s: %v", filePath, err)
 
-		// Логируем с размером 0, но статус success (бэкап-то создан)
-		logEntry := &models.BackupLog{
+		// Логируем с размером 0, но статус success (бэкап создан)
+		saveBackupLog(repository, &models.BackupLog{
 			Name:    filePath,
 			Size:    0,
 			Storage: storageType,
 			Status:  "success",
 			Error:   "не удалось получить размер файла: " + err.Error(),
-		}
-		storage.GetDB().Create(logEntry)
+		}, typ)
 
 		elapsed := time.Since(startTime)
 		log.Printf("Бэкап %s создан: %s (размер: неизвестен, время: %v)",
@@ -86,17 +99,12 @@ func RunBackup(typ string, backupper Backupper, outputDir string, storageType st
 	}
 
 	// Сохраняем в лог успешный бэкап с размером
-	logEntry := &models.BackupLog{
+	saveBackupLog(repository, &models.BackupLog{
 		Name:    filePath,
 		Size:    fileInfo.Size(),
 		Storage: storageType,
 		Status:  "success",
-	}
-
-	if result := storage.GetDB().Create(logEntry); result.Error != nil {
-		log.Printf("Ошибка сохранения лога для %s: %v", typ, result.Error)
-		// Не прерываем выполнение, бэкап уже создан
-	}
+	}, typ)
 
 	elapsed := time.Since(startTime)
 	log.Printf("Бэкап %s создан: %s (размер: %.2f MB, время: %v)",
