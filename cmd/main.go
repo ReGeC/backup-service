@@ -48,7 +48,7 @@ func main() {
 
 	for typ, backupper := range backuppers {
 		// Создание бэкапа
-		localPath, err := backup.RunBackup(typ, backupper, backupLogRepository, cfg.BackupPath, cfg.StorageType)
+		localPath, err := backup.RunBackup(ctx, backupper, backupLogRepository, cfg.BackupPath, cfg.StorageType)
 		if err != nil {
 			msg := "Ошибка создания бэкапа " + typ + ": " + err.Error()
 			notifier.SendAll(notifiers, ctx, msg)

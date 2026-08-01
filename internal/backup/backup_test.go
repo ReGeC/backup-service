@@ -1,6 +1,7 @@
 package backup_test
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -37,10 +38,17 @@ func TestRunBackup_Success(t *testing.T) {
 	backupper := mocks.NewMockBackupper(t)
 	repository := mocks.NewMockBackupLogRepository(t)
 
+	ctx := context.Background()
+
 	backupper.EXPECT().
-		CreateBackup(tmpDir).
+		CreateBackup(ctx, tmpDir).
 		Return(backupPath, nil).
 		Once()
+
+	backupper.EXPECT().
+		GetBackupType().
+    	Return("postgres").
+    	Once()
 
 	repository.
 		On("Create", mock.AnythingOfType("*models.BackupLog")).
@@ -57,7 +65,7 @@ func TestRunBackup_Success(t *testing.T) {
 		Once()
 
 	result, err := backup.RunBackup(
-		"postgres",
+		ctx,
 		backupper,
 		repository,
 		tmpDir,
@@ -77,10 +85,17 @@ func TestRunBackup_CreateBackupError(t *testing.T) {
 	backupper := mocks.NewMockBackupper(t)
 	repository := mocks.NewMockBackupLogRepository(t)
 
+	ctx := context.Background()
+
 	backupper.EXPECT().
-		CreateBackup(tmpDir).
+		CreateBackup(ctx, tmpDir).
 		Return("", createErr).
 		Once()
+
+	backupper.EXPECT().
+		GetBackupType().
+    	Return("postgres").
+    	Once()
 
 	repository.
 		On("Create", mock.AnythingOfType("*models.BackupLog")).
@@ -97,7 +112,7 @@ func TestRunBackup_CreateBackupError(t *testing.T) {
 		Once()
 
 	result, err := backup.RunBackup(
-		"postgres",
+		ctx,
 		backupper,
 		repository,
 		tmpDir,
@@ -120,12 +135,19 @@ func TestRunBackup_StatError(t *testing.T) {
 	backupper := mocks.NewMockBackupper(t)
 	repository := mocks.NewMockBackupLogRepository(t)
 
+	ctx := context.Background()
+
 	// CreateBackup говорит, что backup создан,
 	// но такого файла на диске нет.
 	backupper.EXPECT().
-		CreateBackup(tmpDir).
+		CreateBackup(ctx, tmpDir).
 		Return(backupPath, nil).
 		Once()
+
+	backupper.EXPECT().
+		GetBackupType().
+    	Return("postgres").
+    	Once()
 
 	repository.
 		On("Create", mock.AnythingOfType("*models.BackupLog")).
@@ -146,7 +168,7 @@ func TestRunBackup_StatError(t *testing.T) {
 		Once()
 
 	result, err := backup.RunBackup(
-		"postgres",
+		ctx,
 		backupper,
 		repository,
 		tmpDir,
@@ -174,10 +196,17 @@ func TestRunBackup_RepositoryError(t *testing.T) {
 	backupper := mocks.NewMockBackupper(t)
 	repository := mocks.NewMockBackupLogRepository(t)
 
+	ctx := context.Background()
+
 	backupper.EXPECT().
-		CreateBackup(tmpDir).
+		CreateBackup(ctx, tmpDir).
 		Return(backupPath, nil).
 		Once()
+
+	backupper.EXPECT().
+		GetBackupType().
+    	Return("postgres").
+    	Once()
 
 	repository.
 		On("Create", mock.AnythingOfType("*models.BackupLog")).
@@ -185,7 +214,7 @@ func TestRunBackup_RepositoryError(t *testing.T) {
 		Once()
 
 	result, err := backup.RunBackup(
-		"postgres",
+		ctx,
 		backupper,
 		repository,
 		tmpDir,
@@ -209,10 +238,17 @@ func TestRunBackup_RepositoryErrorAfterBackupFailure(t *testing.T) {
 	backupper := mocks.NewMockBackupper(t)
 	repository := mocks.NewMockBackupLogRepository(t)
 
+	ctx := context.Background()
+
 	backupper.EXPECT().
-		CreateBackup(tmpDir).
+		CreateBackup(ctx, tmpDir).
 		Return("", createErr).
 		Once()
+
+	backupper.EXPECT().
+		GetBackupType().
+    	Return("postgres").
+    	Once()
 
 	repository.
 		On("Create", mock.AnythingOfType("*models.BackupLog")).
@@ -220,7 +256,7 @@ func TestRunBackup_RepositoryErrorAfterBackupFailure(t *testing.T) {
 		Once()
 
 	result, err := backup.RunBackup(
-		"postgres",
+		ctx,
 		backupper,
 		repository,
 		tmpDir,
@@ -306,6 +342,18 @@ func TestInitBackuppers(t *testing.T) {
 	// Если фабрика вернула ошибку,
 	// backupper не должен попасть в результат.
 	assert.NotContains(t, result, errorType)
+}
+
+func TestInitBackuppers_Disabled(t *testing.T) {
+    resetRegistry(t)
+
+    backup.Register("disabled", func() (backup.Backupper, error) {
+        return nil, backup.ErrDisabled
+    })
+
+    result := backup.InitBackuppers()
+
+    assert.Empty(t, result)
 }
 
 func TestRegister_OverridesExistingFactory(t *testing.T) {

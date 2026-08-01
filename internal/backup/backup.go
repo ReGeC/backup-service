@@ -1,12 +1,13 @@
 package backup
 
 import (
-	"log"
+	"context"
+	"errors"
 	"fmt"
+	"log"
+	"os"
 	"sync"
 	"time"
-	"os"
-	"errors"
 
 	"backup-service/internal/models"
 )
@@ -15,7 +16,8 @@ var ErrBackupCreation = errors.New("backup creation failed")
 
 //go:generate mockery
 type Backupper interface {
-	CreateBackup(outputDir string) (string, error)
+	CreateBackup(context context.Context, outputDir string) (string, error)
+	GetBackupType() string
 }
 
 //go:generate mockery
@@ -41,13 +43,16 @@ func ResetRegistry() {
 	registry = make(map[string]func() (Backupper, error))
 }
 
+// TODO: Обработка отключенных модулей
 func InitBackuppers() map[string]Backupper {
 	backuppers := make(map[string]Backupper)
 
 	for typ := range registry {
 		backupper, err := NewBackupper(typ)
 		if err != nil {
-			log.Printf("Ошибка инициализации %s: %v", typ, err)
+			if !errors.Is(err, ErrDisabled) {
+				log.Printf("Ошибка инициализации %s: %v", typ, err)
+			}
 			continue
 		}
 		backuppers[typ] = backupper
@@ -66,11 +71,13 @@ func saveBackupLog(
 	}
 }
 
-func RunBackup(typ string, backupper Backupper, repository BackupLogRepository, outputDir string, storageType string) (string, error) {
+func RunBackup(ctx context.Context, backupper Backupper, repository BackupLogRepository, outputDir string, storageType string) (string, error) {
+	typ := backupper.GetBackupType()
+
 	log.Printf("Создание бэкапа %s\n", typ)
 	startTime := time.Now()
 
-	filePath, err := backupper.CreateBackup(outputDir)
+	filePath, err := backupper.CreateBackup(ctx, outputDir)
 	if err != nil {
 		log.Printf("Ошибка создания бэкапа %s: %v", typ, err)
 
