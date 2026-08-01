@@ -1,27 +1,44 @@
 package backup
 
 import (
+	"backup-service/internal/config"
+	"compress/gzip"
+	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"time"
-	"backup-service/internal/config"
 )
 
 const Postgres = "postgres"
 
+var ErrDisabled = errors.New("postgres backup is disabled")
+
+var (
+	commandContext = exec.CommandContext
+	lookPath       = exec.LookPath
+)
+
 func init() {
-	cfg, enabled, err := config.NewPostgresConfig()
-	if enabled {
-		// Автоматическая регистрация при импорте
-		Register(Postgres, func() (Backupper, error) {
-			if err != nil {
-				return nil, fmt.Errorf("Неверная конфигурация для PostgreSQL: %w", err)
-			}
-			return NewPostgresBackupFromConfig(cfg), nil
-		})
-	}
+	// Автоматическая регистрация при импорте
+	Register(Postgres, newPostgresBackupper)
+}
+
+func newPostgresBackupper() (Backupper, error) {
+    cfg, enabled, err := config.NewPostgresConfig()
+    if err != nil {
+        return nil, err
+    }
+	
+	if !enabled {
+        return nil, ErrDisabled
+    }
+
+    return NewPostgresBackup(cfg.PGHost, cfg.PGPort, cfg.PGUser, cfg.PGPassword, cfg.PGDatabase), nil
 }
 
 type PostgresBackup struct {
@@ -42,43 +59,13 @@ func NewPostgresBackup(host string, port int, user, password, database string) *
 	}
 }
 
-func NewPostgresBackupFromConfig(cfg *config.PostgresConfig) *PostgresBackup {
-	return &PostgresBackup{
-        Host:     cfg.PGHost,
-        Port:     cfg.PGPort,
-        User:     cfg.PGUser,
-        Password: cfg.PGPassword,
-        Database: cfg.PGDatabase,
+
+func (p *PostgresBackup) CreateBackup(ctx context.Context, outputDir string) (fullPath string, err error) {
+	if err := checkDependencies(); err != nil {
+        return "", err
     }
-}
 
-func (p *PostgresBackup) CreateBackup(outputDir string) (fullPath string, err error) {
-	// Проверка, что pg_dump и gzip установлены
-	if _, err := exec.LookPath("pg_dump"); err != nil {
-	    return "", fmt.Errorf("pg_dump not found: %w", err)
-	}
-	if _, err := exec.LookPath("gzip"); err != nil {
-	    return "", fmt.Errorf("gzip not found: %w", err)
-	}
-	
-	// Формирум имя файла: db_2026-07-10_15-30.sql.gz
-	timestamp := time.Now().Format("2006-01-02_15-04")
-	filename := fmt.Sprintf("db_%s.sql.gz", timestamp)
-	fullPath = filepath.Join(outputDir, filename)
-
-	// Команда pg_dump
-	// pg_dump -h localhost -p 5432 -U postgres -d testdb | gzip > backup.sql.gz
-	pgDumpCmd := exec.Command(
-		"pg_dump", 
-		"-h", p.Host,
-		"-p", fmt.Sprintf("%d", p.Port),
-		"-U", p.User,
-		"-d", p.Database,
-		"-F", "p",
-	)
-
-	// Безопасная перадча пароля в команду
-	pgDumpCmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", p.Password))
+    fullPath = buildBackupPath(outputDir)
 
 	// Создаем файл для записи
 	file, err := os.Create(fullPath)
@@ -97,27 +84,90 @@ func (p *PostgresBackup) CreateBackup(outputDir string) (fullPath string, err er
 	}()
 
 	// Пишем вывод pg_dump в файл через gzip
-	gzipCmd := exec.Command("gzip")
-	gzipCmd.Stdin, err = pgDumpCmd.StdoutPipe()
-	if err != nil {
-		return "", fmt.Errorf("Ошибка получения входного потока: %w", err)
-	}
-	gzipCmd.Stdout = file
-
-	// Запуск gzip
-	if err := gzipCmd.Start(); err != nil {
-		return "", fmt.Errorf("Ошибка запуска gzip: %w", err)
-	}
-
-	// Запуск pg_dump
-	if err := pgDumpCmd.Run(); err != nil {
-		return "", fmt.Errorf("Ошибка pg_dump: %w", err)
-	}
-
-	// Ждем завершения gzip
-	if err := gzipCmd.Wait(); err != nil {
-		return "", fmt.Errorf("Ошибка gzip: %w", err)
-	}
+	if err = p.dumpTo(ctx, file); err != nil {
+        return "", err
+    }
 
 	return fullPath, nil
+}
+
+func checkDependencies() error {
+    binaries := []string{"pg_dump"}
+
+    for _, bin := range binaries {
+        if _, err := lookPath(bin); err != nil {
+            return fmt.Errorf("%s not found", bin)
+        }
+    }
+
+    return nil
+}
+
+func buildBackupPath(dir string) string {
+    timestamp := time.Now().Format("2006-01-02_15-04")
+    return filepath.Join(dir, fmt.Sprintf("db_%s.sql.gz", timestamp))
+}
+
+func (p *PostgresBackup) dumpTo(ctx context.Context, dst io.Writer) error {
+    // Команда pg_dump
+	// pg_dump -h localhost -p 5432 -U postgres -d testdb
+	cmd := p.newDumpCommand(ctx)
+	
+	stdout, err := cmd.StdoutPipe()
+    if err != nil {
+        return fmt.Errorf("ошибка потока вывода: %w", err)
+    }
+
+    if err := cmd.Start(); err != nil {
+        return fmt.Errorf("ошибка запуска pg_dump: %w", err)
+    }
+
+    if err := compressTo(dst, stdout); err != nil {
+        _ = cmd.Process.Kill()
+        _ = cmd.Wait()
+        return err
+    }
+
+    if err := cmd.Wait(); err != nil {
+        return fmt.Errorf("ошибка ожидания pg_dump: %w", err)
+    }
+
+    return nil
+}
+
+func (p *PostgresBackup) newDumpCommand(ctx context.Context) *exec.Cmd {
+    cmd := commandContext(
+		ctx,
+        "pg_dump",
+        "-h", p.Host,
+        "-p", strconv.Itoa(p.Port),
+        "-U", p.User,
+        "-d", p.Database,
+        "-F", "p",
+    )
+
+    cmd.Env = append(os.Environ(),
+        "PGPASSWORD="+p.Password,
+    )
+
+    return cmd
+}
+
+func compressTo(dst io.Writer, src io.Reader) (err error) {
+    gz := gzip.NewWriter(dst)
+    defer func () {
+		if gzCloseErr := gz.Close(); gzCloseErr != nil {
+        	err = fmt.Errorf("ошибка записывания gzip: %w", gzCloseErr)
+    	}
+	}()
+
+    if _, err := io.Copy(gz, src); err != nil {
+        return fmt.Errorf("ошибка сжатия бэкапа: %w", err)
+    }
+
+    return nil
+}
+
+func (p* PostgresBackup) GetBackupType() string {
+	return Postgres
 }
