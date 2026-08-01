@@ -1,12 +1,13 @@
 package backup
 
 import (
+	"backup-service/internal/config"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
-	"backup-service/internal/config"
 )
 
 const SQLite = "sqlite"
@@ -40,7 +41,7 @@ func NewSQLiteBackupFromConfig(cfg *config.SQLiteConfig) *SQLiteBackup {
     }
 }
 
-func (s *SQLiteBackup) CreateBackup(outputDir string) (fullPath string, err error) {
+func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (fullPath string, err error) {
 	timestamp := time.Now().Format("2006-01-02_15-04")
 	filename := fmt.Sprintf("sqlite_%s.db.bak", timestamp)
 	fullPath = filepath.Join(outputDir, filename)
@@ -78,4 +79,8 @@ func (s *SQLiteBackup) CreateBackup(outputDir string) (fullPath string, err erro
 	}
 
 	return fullPath, nil
+}
+
+func (s* SQLiteBackup) GetBackupType() string {
+	return SQLite
 }
