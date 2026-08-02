@@ -15,6 +15,14 @@ import (
 
 const YandexS3 = "yandex_s3"
 
+// Добавляем интерфейс для S3 клиента
+//go:generate mockery
+type S3Client interface {
+	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
+	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+}
+
 func init() {
 	Register(YandexS3, func() (Storage, error) {
 		cfg, _, err := config.NewYandexS3Config()
@@ -26,7 +34,7 @@ func init() {
 }
 
 type YandexS3Storage struct {
-	client *s3.Client
+	client S3Client
 	bucket string
 }
 
@@ -42,16 +50,20 @@ func NewYandexS3Storage(cfg *config.YandexS3Config) (*YandexS3Storage, error) {
 		BaseEndpoint: aws.String(cfg.S3Endpoint),
 	})
 
+	return NewYandexS3StorageWithS3Client(client, cfg.S3Bucket)
+}
+
+func NewYandexS3StorageWithS3Client(client S3Client, bucket string) (*YandexS3Storage, error) {
 	return &YandexS3Storage{
 		client: client,
-		bucket: cfg.S3Bucket,
+		bucket: bucket,
 	}, nil
 }
 
 
 
 
-func (s *YandexS3Storage) Save(ctx context.Context, localPath string) (string, error) {
+func (s *YandexS3Storage) Save(ctx context.Context, localPath string) (filename string, err error) {
 	// Проверка существования файла
 	if _, err := os.Stat(localPath); err != nil {
 		return "", fmt.Errorf("Файл бэкапа не найден: %w", err)
@@ -63,20 +75,26 @@ func (s *YandexS3Storage) Save(ctx context.Context, localPath string) (string, e
 		return "", fmt.Errorf("Ошибка открытия файла %s: %w", localPath, err)
 	}
 	defer func() {
-		if closeErr := file.Close(); closeErr != nil && err == nil {
-			err = fmt.Errorf("Закрытие файла %s прервано: %w", localPath, closeErr)
+		if _, statErr := os.Stat(file.Name()); statErr == nil {
+			if closeErr := file.Close(); closeErr != nil && err == nil {
+				err = fmt.Errorf("Закрытие файла %s прервано: %w", localPath, closeErr)
+			}
 		}
 	}()
 
 	// Загрузка в S3
-	filename := filepath.Base(localPath)
+	filename = filepath.Base(localPath)
 	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
-		Key: aws.String(filename),
-		Body: file,
+		Key:    aws.String(filename),
+		Body:   file,
 	})
 	if err != nil {
 		return "", fmt.Errorf("Ошибка загрузки в S3: %w", err)
+	}
+
+	if err := file.Close(); err != nil {
+		log.Printf("WARNING: Не удалось закрыть файл %s: %v", localPath, err)
 	}
 
 	// Удаление локального файла
@@ -86,6 +104,7 @@ func (s *YandexS3Storage) Save(ctx context.Context, localPath string) (string, e
 
 	return filename, nil
 }
+
 
 
 
@@ -100,8 +119,8 @@ func (s *YandexS3Storage) List(ctx context.Context) ([]FileInfo, error) {
 	var files []FileInfo
 	for _, obj := range result.Contents {
 		files = append(files, FileInfo{
-			Name: *obj.Key,
-			Size: *obj.Size,
+			Name:      *obj.Key,
+			Size:      *obj.Size,
 			CreatedAt: *obj.LastModified,
 		})
 	}
@@ -111,10 +130,11 @@ func (s *YandexS3Storage) List(ctx context.Context) ([]FileInfo, error) {
 
 
 
+
 func (s *YandexS3Storage) Delete(ctx context.Context, path string) error {
 	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
-		Key: aws.String(path),
+		Key:    aws.String(path),
 	})
 	if err != nil {
 		return fmt.Errorf("Ошибка удаления из S3: %w", err)
