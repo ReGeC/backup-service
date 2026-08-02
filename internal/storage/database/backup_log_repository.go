@@ -16,6 +16,6 @@ func NewGormBackupLogRepository(db *gorm.DB) *GormBackupLogRepository {
 	}
 }
 
-func (r *GormBackupLogRepository) Create(log *models.BackupLog) error {
+func (r *GormBackupLogRepository) CreateLog(log *models.BackupLog) error {
 	return r.db.Create(log).Error
 }

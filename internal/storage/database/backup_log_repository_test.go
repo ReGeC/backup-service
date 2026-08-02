@@ -97,7 +97,7 @@ func TestGormBackupLogRepository(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				err := repo.Create(tt.log)
+				err := repo.CreateLog(tt.log)
 				if tt.hasErr {
 					assert.Error(t, err)
 				} else {
@@ -124,7 +124,7 @@ func TestGormBackupLogRepository(t *testing.T) {
 		}
 
 		for _, log := range logs {
-			err := repo.Create(log)
+			err := repo.CreateLog(log)
 			assert.NoError(t, err)
 			assert.NotZero(t, log.ID)
 		}

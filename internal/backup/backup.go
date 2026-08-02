@@ -12,6 +12,7 @@ import (
 	"backup-service/internal/models"
 )
 
+var ErrDisabled = errors.New("backup is disabled")
 var ErrBackupCreation = errors.New("backup creation failed")
 
 //go:generate mockery
@@ -22,7 +23,7 @@ type Backupper interface {
 
 //go:generate mockery
 type BackupLogRepository interface {
-    Create(*models.BackupLog) error
+    CreateLog(*models.BackupLog) error
 }
 
 // Глобальная хешмапа регистра
@@ -66,7 +67,7 @@ func saveBackupLog(
 	logEntry *models.BackupLog,
 	backupType string,
 ) {
-	if err := repository.Create(logEntry); err != nil {
+	if err := repository.CreateLog(logEntry); err != nil {
 		log.Printf("Ошибка сохранения лога для %s: %v", backupType, err)
 	}
 }

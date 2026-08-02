@@ -51,7 +51,7 @@ func TestRunBackup_Success(t *testing.T) {
     	Once()
 
 	repository.
-		On("Create", mock.AnythingOfType("*models.BackupLog")).
+		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
 		Run(func(args mock.Arguments) {
 			logEntry := args.Get(0).(*models.BackupLog)
 
@@ -98,7 +98,7 @@ func TestRunBackup_CreateBackupError(t *testing.T) {
     	Once()
 
 	repository.
-		On("Create", mock.AnythingOfType("*models.BackupLog")).
+		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
 		Run(func(args mock.Arguments) {
 			logEntry := args.Get(0).(*models.BackupLog)
 
@@ -150,7 +150,7 @@ func TestRunBackup_StatError(t *testing.T) {
     	Once()
 
 	repository.
-		On("Create", mock.AnythingOfType("*models.BackupLog")).
+		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
 		Run(func(args mock.Arguments) {
 			logEntry := args.Get(0).(*models.BackupLog)
 
@@ -209,7 +209,7 @@ func TestRunBackup_RepositoryError(t *testing.T) {
     	Once()
 
 	repository.
-		On("Create", mock.AnythingOfType("*models.BackupLog")).
+		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
 		Return(repositoryErr).
 		Once()
 
@@ -251,7 +251,7 @@ func TestRunBackup_RepositoryErrorAfterBackupFailure(t *testing.T) {
     	Once()
 
 	repository.
-		On("Create", mock.AnythingOfType("*models.BackupLog")).
+		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
 		Return(repositoryErr).
 		Once()
 
