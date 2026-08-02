@@ -36,3 +36,7 @@ packages:
     interfaces:
       Storage: {}
       S3Client: {}
+
+  backup-service/internal/notifier:
+    interfaces:
+      Notifier: {}
