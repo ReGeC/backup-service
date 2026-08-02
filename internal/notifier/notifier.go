@@ -2,11 +2,15 @@ package notifier
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
 )
 
+var ErrDisabled = errors.New("Notifier is disabled: ")
+
+//go:generate mockery
 type Notifier interface {
 	// Функция отправки уведомлений
 	Send (ctx context.Context, message string) error
@@ -21,13 +25,23 @@ func Register(typ string, factory func() (Notifier, error)) {
 	registry[typ] = factory
 }
 
+func ResetRegistry() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	registry = make(map[string]func() (Notifier, error))
+}
+
 func InitNotifiers() map[string]Notifier {
 	notifiers := make(map[string]Notifier)
 
 	for typ := range registry {
 		notifier, err := NewNotifier(typ)
 		if err != nil {
-			log.Printf("Ошибка инициализации %s: %v", typ, err)
+			if !errors.Is(err, ErrDisabled) {
+				log.Printf("Ошибка инициализации %s: %v", typ, err)
+			}
+			continue
 		}
 		notifiers[typ] = notifier
 	}
