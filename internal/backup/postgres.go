@@ -2,16 +2,13 @@ package backup
 
 import (
 	"backup-service/internal/config"
-	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
-	"time"
 )
 
 const Postgres = "postgres"
@@ -61,7 +58,11 @@ func NewPostgresBackup(host string, port int, user, password, database string) *
 
 
 func (p *PostgresBackup) CreateBackup(ctx context.Context, outputDir string) (fullPath string, err error) {
-	if err := checkDependencies(); err != nil {
+	if ctx.Err() != nil {
+		return "", ctx.Err()
+	}
+	
+	if err := p.checkDependencies(); err != nil {
         return "", err
     }
 
@@ -91,7 +92,7 @@ func (p *PostgresBackup) CreateBackup(ctx context.Context, outputDir string) (fu
 	return fullPath, nil
 }
 
-func checkDependencies() error {
+func (p *PostgresBackup) checkDependencies() error {
     binaries := []string{"pg_dump"}
 
     for _, bin := range binaries {
@@ -101,11 +102,6 @@ func checkDependencies() error {
     }
 
     return nil
-}
-
-func buildBackupPath(dir string) string {
-    timestamp := time.Now().Format("2006-01-02_15-04")
-    return filepath.Join(dir, fmt.Sprintf("db_%s.sql.gz", timestamp))
 }
 
 func (p *PostgresBackup) dumpTo(ctx context.Context, dst io.Writer) error {
@@ -151,21 +147,6 @@ func (p *PostgresBackup) newDumpCommand(ctx context.Context) *exec.Cmd {
     )
 
     return cmd
-}
-
-func compressTo(dst io.Writer, src io.Reader) (err error) {
-    gz := gzip.NewWriter(dst)
-    defer func () {
-		if gzCloseErr := gz.Close(); gzCloseErr != nil {
-        	err = fmt.Errorf("ошибка записывания gzip: %w", gzCloseErr)
-    	}
-	}()
-
-    if _, err := io.Copy(gz, src); err != nil {
-        return fmt.Errorf("ошибка сжатия бэкапа: %w", err)
-    }
-
-    return nil
 }
 
 func (p* PostgresBackup) GetBackupType() string {

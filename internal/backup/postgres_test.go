@@ -177,11 +177,19 @@ func TestCheckDependencies_Success(t *testing.T) {
 		return "pg_dump", nil
 	}
 
+	p := NewPostgresBackup(
+		"localhost",
+		5432,
+		"postgres",
+		"password",
+		"testdb",
+	)
+
 	t.Cleanup(func() {
 		lookPath = old
 	})
 
-	require.NoError(t, checkDependencies())
+	require.NoError(t, p.checkDependencies())
 }
 
 func TestCheckDependencies_Error(t *testing.T) {
