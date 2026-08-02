@@ -79,7 +79,7 @@ func (p *PostgresBackup) CreateBackup(ctx context.Context, outputDir string) (fu
 	    }
 
 	    if err != nil {
-	        _ = os.Remove(fullPath)
+	        _ = os.Remove(file.Name())
 	    }
 	}()
 
@@ -146,7 +146,7 @@ func (p *PostgresBackup) newDumpCommand(ctx context.Context) *exec.Cmd {
         "-F", "p",
     )
 
-    cmd.Env = append(os.Environ(),
+    cmd.Env = append(cmd.Env,
         "PGPASSWORD="+p.Password,
     )
 
