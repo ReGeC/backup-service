@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("Ошибка конфигурационного файла: ", err)
 	}
 
-	db, err := database.InitDB()
+	db, err := database.InitDB("backup_service.db")
 	if err != nil {
 		log.Fatal("Ошибка инициализации БД: ", err)
 	}

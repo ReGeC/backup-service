@@ -8,9 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDB() (*gorm.DB, error) {
+func InitDB(dbname string) (*gorm.DB, error) {
 	var err error
-	DB, err := gorm.Open(sqlite.Open("backup_service.db"), &gorm.Config{})
+	DB, err := gorm.Open(sqlite.Open(dbname), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
