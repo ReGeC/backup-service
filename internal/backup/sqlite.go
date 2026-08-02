@@ -6,23 +6,26 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"time"
 )
 
 const SQLite = "sqlite"
 
 func init() {
 	// Автоматическая регистрация при импорте
-	cfg, enabled, err := config.NewSQLiteConfig()
-	if enabled {
-		Register(SQLite, func() (Backupper, error) {
-			if err != nil {
-				return nil, fmt.Errorf("Неверная конфигурация для SQLite: %w", err)
-			}
-			return NewSQLiteBackupFromConfig(cfg), nil
-		})
-	}
+	Register(SQLite, newSQLiteBackupper)
+}
+
+func newSQLiteBackupper() (Backupper, error) {
+    cfg, enabled, err := config.NewSQLiteConfig()
+    if err != nil {
+        return nil, err
+    }
+	
+	if !enabled {
+        return nil, ErrDisabled
+    }
+
+    return NewSQLiteBackup(cfg.SQLitePath), nil
 }
 
 type SQLiteBackup struct {
@@ -35,21 +38,20 @@ func NewSQLiteBackup(dbPath string) *SQLiteBackup {
 	}
 }
 
-func NewSQLiteBackupFromConfig(cfg *config.SQLiteConfig) *SQLiteBackup {
-	return &SQLiteBackup{
-        DBPath: cfg.SQLitePath,
-    }
-}
-
 func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (fullPath string, err error) {
-	timestamp := time.Now().Format("2006-01-02_15-04")
-	filename := fmt.Sprintf("sqlite_%s.db.bak", timestamp)
-	fullPath = filepath.Join(outputDir, filename)
-
-	// Проекра на существование БД
-	if _, err := os.Stat(s.DBPath); os.IsNotExist(err) {
-		return "", fmt.Errorf("Файл БД не найден: %s", s.DBPath)
+	if ctx.Err() != nil {
+		return "", ctx.Err()
 	}
+	
+	fullPath = buildBackupPath(outputDir)
+
+	// Проверка на существование БД
+	if _, err := os.Stat(s.DBPath); err != nil {
+        if os.IsNotExist(err) {
+            return "", fmt.Errorf("файл БД не найден: %s", s.DBPath)
+        }
+        return "", fmt.Errorf("проверка файла БД: %w", err)
+    }
 
 	// Копируем файл
 	srcFile, err := os.Open(s.DBPath)
@@ -69,7 +71,7 @@ func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (full
 	    }
 
 	    if err != nil {
-	        _ = os.Remove(fullPath)
+	        _ = os.Remove(dstFile.Name())
 	    }
 	}()
 
@@ -80,6 +82,7 @@ func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (full
 
 	return fullPath, nil
 }
+
 
 func (s* SQLiteBackup) GetBackupType() string {
 	return SQLite
