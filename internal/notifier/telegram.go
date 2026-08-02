@@ -2,30 +2,39 @@ package notifier
 
 import (
 	"backup-service/internal/config"
-	"fmt"
-	"encoding/json"
 	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 )
 
 const Telegram = "telegram"
 
+var ErrTelegramDisabled = errors.Join(ErrDisabled, errors.New(Telegram))
+
+var telegramConfigLoader config.ConfigLoader = &config.EnvLoader{}
+
 func init() {
-	cfg, enabled, err := config.NewTelegramConfig()
-	if enabled {
-		Register(Telegram, func() (Notifier, error) {
-			if err != nil {
-				return nil, fmt.Errorf("Ошибка конфигурации telegram: %w", err)
-			}
-			return NewTelegramNotifier(cfg), nil
-		})
-	} else {
-		Register(Noop, func() (Notifier, error) {
-			return &NoopNotifier{}, nil
-		})
-	}
+	// Автоматическая регистрация при импорте
+	Register(Telegram, newTelegramNotifier)
+}
+
+func newTelegramNotifier() (Notifier, error) {
+    cfg, enabled, err := config.NewTelegramConfigWithLoader(telegramConfigLoader)
+    if err != nil {
+        return nil, err
+    }
+	
+	if !enabled {
+        return nil, ErrTelegramDisabled
+    }
+
+	client := &http.Client{ Timeout: 10 * time.Second }
+
+    return NewTelegramNotifier(cfg.TelegramBotToken, cfg.TelegramChatID, client), nil
 }
 
 type TelegramNotifier struct {
@@ -34,18 +43,20 @@ type TelegramNotifier struct {
 	client   *http.Client
 }
 
-func NewTelegramNotifier(cfg *config.TelegramConfig) *TelegramNotifier {
+func NewTelegramNotifier(telegramBotToken, telegramChatID string, client *http.Client) *TelegramNotifier {
 	return &TelegramNotifier{
-		botToken: cfg.TelegramBotToken,
-		chatID:   cfg.TelegramChatID,
-		client: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+		botToken: telegramBotToken,
+		chatID:   telegramChatID,
+		client: client,
 	}
 }
 
 // Send отправляет сообщение в Telegram
 func (t *TelegramNotifier) Send(ctx context.Context, message string) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", t.botToken)
 
 	payload := map[string]string{
