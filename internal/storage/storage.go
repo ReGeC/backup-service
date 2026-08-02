@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+//go:generate mockery
 type Storage interface {
 	Save(ctx context.Context, localPath string) (string, error)
 	List(ctx context.Context) ([]FileInfo, error)
@@ -27,6 +28,13 @@ func Register(typ string, factory func() (Storage, error)) {
 	mu.Lock()
 	defer mu.Unlock()
 	registry[typ] = factory
+}
+
+func ResetRegistry() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	registry = make(map[string]func() (Storage, error))
 }
 
 func NewStorage(typ string) (Storage, error) {
