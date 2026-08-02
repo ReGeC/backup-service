@@ -13,7 +13,7 @@ import (
 
 const Postgres = "postgres"
 
-var ErrDisabled = errors.New("postgres backup is disabled")
+var ErrPostgresDisabled = errors.Join(ErrDisabled, errors.New(Postgres))
 
 var (
 	commandContext = exec.CommandContext
@@ -32,7 +32,7 @@ func newPostgresBackupper() (Backupper, error) {
     }
 	
 	if !enabled {
-        return nil, ErrDisabled
+        return nil, ErrPostgresDisabled
     }
 
     return NewPostgresBackup(cfg.PGHost, cfg.PGPort, cfg.PGUser, cfg.PGPassword, cfg.PGDatabase), nil

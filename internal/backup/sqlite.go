@@ -3,12 +3,14 @@ package backup
 import (
 	"backup-service/internal/config"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 )
 
 const SQLite = "sqlite"
+var ErrSQLiteDisabled = errors.Join(ErrDisabled, errors.New(SQLite))
 
 func init() {
 	// Автоматическая регистрация при импорте
@@ -22,7 +24,7 @@ func newSQLiteBackupper() (Backupper, error) {
     }
 	
 	if !enabled {
-        return nil, ErrDisabled
+        return nil, ErrSQLiteDisabled
     }
 
     return NewSQLiteBackup(cfg.SQLitePath), nil
