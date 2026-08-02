@@ -31,3 +31,8 @@ packages:
     interfaces:
       Backupper: {}
       BackupLogRepository: {}
+
+  backup-service/internal/storage:
+    interfaces:
+      Storage: {}
+      S3Client: {}
