@@ -45,7 +45,7 @@ func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (full
 		return "", ctx.Err()
 	}
 	
-	fullPath = buildBackupPath(outputDir)
+	fullPath = buildBackupPath(SQLite, outputDir)
 
 	// Проверка на существование БД
 	if _, err := os.Stat(s.DBPath); err != nil {

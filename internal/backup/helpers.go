@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-func buildBackupPath(dir string) string {
+func buildBackupPath(typ, dir string) string {
     timestamp := time.Now().Format("2006-01-02_15-04")
-    return filepath.Join(dir, fmt.Sprintf("db_%s.sql.gz", timestamp))
+    return filepath.Join(dir, fmt.Sprintf("db_%s_%s.sql.gz", timestamp, typ))
 }
 
 func compressTo(dst io.Writer, src io.Reader) (err error) {

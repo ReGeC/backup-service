@@ -240,7 +240,7 @@ func TestCompressTo_Success(t *testing.T) {
 func TestBuildBackupPath(t *testing.T) {
 	dir := t.TempDir()
 
-	path := buildBackupPath(dir)
+	path := buildBackupPath("postgres", dir)
 
 	assert.True(t, strings.HasPrefix(path, dir))
 	assert.True(t, strings.HasSuffix(path, ".sql.gz"))

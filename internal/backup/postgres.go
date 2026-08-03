@@ -66,7 +66,7 @@ func (p *PostgresBackup) CreateBackup(ctx context.Context, outputDir string) (fu
         return "", err
     }
 
-    fullPath = buildBackupPath(outputDir)
+    fullPath = buildBackupPath(Postgres, outputDir)
 
 	// Создаем файл для записи
 	file, err := os.Create(fullPath)
