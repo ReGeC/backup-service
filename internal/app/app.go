@@ -164,9 +164,7 @@ func (a *App) Cleanup() error {
 
 func (a *App) Restore(backupName, backupType string) error {
     slog.Info("восстановление из бэкапа", "backup", backupName, "type", backupType)
-    
-    // Переносим логику из restore-backup/main.go
-    
+       
     // Получаем бэкаппер по типу
     backupper, ok := a.backuppers[backupType]
     if !ok {
