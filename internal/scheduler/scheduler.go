@@ -32,10 +32,15 @@ func (s *Scheduler) Stop(ctx context.Context) {
 	if s.cron == nil {
 		return
 	}
-	
+
 	stopCtx := s.cron.Stop()
-	<-stopCtx.Done()
-	slog.Info("Планировщик cron остановлен")
+
+	select {
+	case <-stopCtx.Done():
+		slog.Info("Планировщик остановлен")
+	case <-ctx.Done():
+		slog.Info("Планировщик остановлен по контексту")
+	}
 }
 
 // AddJob добавляет задачу с расписанием
