@@ -28,7 +28,7 @@ func (b *BackupConfig) LoadConfig() error {
 	b.BackupPath = b.loader.GetEnv("BACKUP_TEMP_PATH", "./tmp/backups")
 	b.RetentionDays = b.loader.GetEnvAsInt("BACKUP_RETENTION_DAYS", 7)
 	b.CronEnable = b.loader.GetEnvAsBool("CRON_ENABLE", false)
-	b.BackupSchedule = b.loader.GetEnv("BACKUP_SCHEDULE", "0 3 * * *")
+	b.BackupSchedule = b.loader.GetEnv("CRON_SCHEDULE", "0 0 3 * * *")
 
 	return b.ValidateConfig()
 }
