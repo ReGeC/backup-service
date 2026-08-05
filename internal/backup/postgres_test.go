@@ -287,3 +287,228 @@ func TestNewPostgresBackupper(t *testing.T) {
         assert.Nil(t, backupper)
     })
 }
+
+
+func TestHelperPSQLProcess(t *testing.T) {
+	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
+		return
+	}
+
+	switch os.Getenv("PSQL_MODE") {
+	case "ok":
+		_, _ = io.Copy(io.Discard, os.Stdin)
+		os.Exit(0)
+
+	case "fail":
+		_, _ = os.Stderr.WriteString("psql failed")
+		os.Exit(1)
+	}
+
+	os.Exit(0)
+}
+
+func createRestoreBackup(t *testing.T) string {
+	t.Helper()
+
+	path := filepath.Join(t.TempDir(), "backup.sql.gz")
+
+	file, err := os.Create(path)
+	require.NoError(t, err)
+
+	gz := gzip.NewWriter(file)
+
+	_, err = gz.Write([]byte("CREATE TABLE test(id int);"))
+	require.NoError(t, err)
+
+	require.NoError(t, gz.Close())
+	require.NoError(t, file.Close())
+
+	return path
+}
+
+func TestRestoreBackup_ContextCanceled(t *testing.T) {
+	p := NewPostgresBackup(
+		"localhost",
+		5432,
+		"postgres",
+		"password",
+		"db",
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	db, err := p.RestoreBackup(ctx, "")
+
+	require.ErrorIs(t, err, context.Canceled)
+	assert.Empty(t, db)
+}
+
+func TestRestoreBackup_NoPSQL(t *testing.T) {
+	old := lookPath
+
+	lookPath = func(string) (string, error) {
+		return "", errors.New("not found")
+	}
+
+	t.Cleanup(func() {
+		lookPath = old
+	})
+
+	p := NewPostgresBackup(
+		"localhost",
+		5432,
+		"postgres",
+		"password",
+		"db",
+	)
+
+	db, err := p.RestoreBackup(context.Background(), "")
+
+	require.Error(t, err)
+	assert.Empty(t, db)
+	assert.Contains(t, err.Error(), "psql")
+}
+
+func TestRestoreBackup_Success(t *testing.T) {
+	oldCommand := commandContext
+	oldLookPath := lookPath
+
+	commandContext = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+		cmd := exec.CommandContext(
+			ctx,
+			os.Args[0],
+			"-test.run=^TestHelperPSQLProcess$",
+		)
+
+		cmd.Env = append(
+			os.Environ(),
+			"GO_WANT_HELPER_PROCESS=1",
+			"PSQL_MODE=ok",
+		)
+
+		return cmd
+	}
+
+	lookPath = func(string) (string, error) {
+		return "psql", nil
+	}
+
+	t.Cleanup(func() {
+		commandContext = oldCommand
+		lookPath = oldLookPath
+	})
+
+	p := NewPostgresBackup(
+		"localhost",
+		5432,
+		"postgres",
+		"password",
+		"db",
+	)
+
+	db, err := p.RestoreBackup(context.Background(), createRestoreBackup(t))
+
+	require.NoError(t, err)
+	assert.NotEmpty(t, db)
+}
+
+func TestRestoreBackup_CreateDatabaseError(t *testing.T) {
+	oldCommand := commandContext
+	oldLookPath := lookPath
+
+	commandContext = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+		cmd := exec.CommandContext(
+			ctx,
+			os.Args[0],
+			"-test.run=^TestHelperPSQLProcess$",
+		)
+
+		cmd.Env = append(
+			os.Environ(),
+			"GO_WANT_HELPER_PROCESS=1",
+			"PSQL_MODE=fail",
+		)
+
+		return cmd
+	}
+
+	lookPath = func(string) (string, error) {
+		return "psql", nil
+	}
+
+	t.Cleanup(func() {
+		commandContext = oldCommand
+		lookPath = oldLookPath
+	})
+
+	p := NewPostgresBackup(
+		"localhost",
+		5432,
+		"postgres",
+		"password",
+		"db",
+	)
+
+	db, err := p.RestoreBackup(context.Background(), createRestoreBackup(t))
+
+	require.Error(t, err)
+	assert.Empty(t, db)
+	assert.Contains(t, err.Error(), "не удалось создать БД")
+}
+
+func TestRestoreBackup_RestoreError(t *testing.T) {
+	oldCommand := commandContext
+	oldLookPath := lookPath
+
+	var calls int
+
+	commandContext = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+		calls++
+
+		mode := "ok"
+
+		if calls == 2 {
+			mode = "fail"
+		}
+
+		cmd := exec.CommandContext(
+			ctx,
+			os.Args[0],
+			"-test.run=^TestHelperPSQLProcess$",
+		)
+
+		cmd.Env = append(
+			os.Environ(),
+			"GO_WANT_HELPER_PROCESS=1",
+			"PSQL_MODE="+mode,
+		)
+
+		return cmd
+	}
+
+	lookPath = func(string) (string, error) {
+		return "psql", nil
+	}
+
+	t.Cleanup(func() {
+		commandContext = oldCommand
+		lookPath = oldLookPath
+	})
+
+	p := NewPostgresBackup(
+		"localhost",
+		5432,
+		"postgres",
+		"password",
+		"db",
+	)
+
+	db, err := p.RestoreBackup(context.Background(), createRestoreBackup(t))
+
+	require.Error(t, err)
+	assert.Empty(t, db)
+	assert.Contains(t, err.Error(), "ошибка восстановления")
+}
+
+

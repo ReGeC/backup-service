@@ -17,7 +17,8 @@ var ErrBackupCreation = errors.New("backup creation failed")
 
 //go:generate mockery
 type Backupper interface {
-	CreateBackup(context context.Context, outputDir string) (string, error)
+	CreateBackup(ctx context.Context, outputDir string) (string, error)
+	RestoreBackup(ctx context.Context, backupPath string) (string, error)
 	GetBackupType() string
 }
 

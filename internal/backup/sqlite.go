@@ -85,6 +85,51 @@ func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (full
 	return fullPath, nil
 }
 
+func (s *SQLiteBackup) RestoreBackup(ctx context.Context, backupPath string) (string, error) {
+	if ctx.Err() != nil {
+		return "", ctx.Err()
+	}
+
+	// Проверяем наличие бэкапа
+	if _, err := os.Stat(backupPath); err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("файл бэкапа не найден: %s", backupPath)
+		}
+		return "", fmt.Errorf("проверка файла бэкапа: %w", err)
+	}
+
+	// Формируем имя восстановленной БД
+	restoredPath := buildRestoredPath(s.DBPath)+".db"
+
+	srcFile, err := os.Open(backupPath)
+	if err != nil {
+		return "", fmt.Errorf("ошибка открытия бэкапа: %w", err)
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(restoredPath)
+	if err != nil {
+		return "", fmt.Errorf("ошибка создания восстановленной БД: %w", err)
+	}
+
+	defer func() {
+		if closeErr := dstFile.Close(); err == nil && closeErr != nil {
+			err = fmt.Errorf("ошибка закрытия файла: %w", closeErr)
+		}
+
+		if err != nil {
+			_ = os.Remove(restoredPath)
+		}
+	}()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return "", fmt.Errorf("ошибка восстановления БД: %w", err)
+	}
+
+	return restoredPath, nil
+}
+
 
 func (s* SQLiteBackup) GetBackupType() string {
 	return SQLite

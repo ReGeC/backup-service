@@ -155,3 +155,101 @@ func TestNewSQLiteBackupper(t *testing.T) {
         assert.Nil(t, backupper)
     })
 }
+
+func TestSQLiteBackup_RestoreBackup_Success(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Создаем файл бэкапа
+	backupPath := filepath.Join(tempDir, "backup.db")
+	backupContent := []byte("backup database content")
+
+	err := os.WriteFile(backupPath, backupContent, 0644)
+	require.NoError(t, err)
+
+	// Исходная БД, которую не должны изменять
+	dbPath := filepath.Join(tempDir, "original.db")
+	err = os.WriteFile(dbPath, []byte("original database"), 0644)
+	require.NoError(t, err)
+
+	backup := NewSQLiteBackup(dbPath)
+
+	restoredPath, err := backup.RestoreBackup(context.Background(), backupPath)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, restoredPath)
+
+	// Проверяем существование файла
+	_, err = os.Stat(restoredPath)
+	assert.NoError(t, err)
+
+	// Проверяем содержимое восстановленной БД
+	content, err := os.ReadFile(restoredPath)
+	assert.NoError(t, err)
+	assert.Equal(t, backupContent, content)
+
+	// Проверяем, что оригинальная БД не была изменена
+	originalContent, err := os.ReadFile(dbPath)
+	assert.NoError(t, err)
+	assert.Equal(t, []byte("original database"), originalContent)
+}
+
+func TestSQLiteBackup_RestoreBackup_BackupFileNotFound(t *testing.T) {
+	backup := NewSQLiteBackup("/tmp/test.db")
+
+	restoredPath, err := backup.RestoreBackup(
+		context.Background(),
+		"/nonexistent/backup.db",
+	)
+
+	assert.Error(t, err)
+	assert.Empty(t, restoredPath)
+	assert.Contains(t, err.Error(), "файл бэкапа не найден")
+}
+
+func TestSQLiteBackup_RestoreBackup_CanceledContext(t *testing.T) {
+	tempDir := t.TempDir()
+
+	backupPath := filepath.Join(tempDir, "backup.db")
+	err := os.WriteFile(backupPath, []byte("backup"), 0644)
+	require.NoError(t, err)
+
+	backup := NewSQLiteBackup(filepath.Join(tempDir, "db.sqlite"))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	restoredPath, err := backup.RestoreBackup(ctx, backupPath)
+
+	assert.Error(t, err)
+	assert.Empty(t, restoredPath)
+	assert.Equal(t, context.Canceled, err)
+}
+
+func TestSQLiteBackup_RestoreBackup_CannotCreateRestoredFile(t *testing.T) {
+	tempDir := t.TempDir()
+
+	backupPath := filepath.Join(tempDir, "backup.db")
+	err := os.WriteFile(backupPath, []byte("backup"), 0644)
+	require.NoError(t, err)
+
+	dbPath := filepath.Join(tempDir, "db.db")
+
+	backup := NewSQLiteBackup(dbPath)
+
+	// Получаем реальный путь, который будет использовать RestoreBackup
+	restoredPath := buildRestoredPath(dbPath)+".db"
+
+	// Создаем директорию с таким же именем,
+	// чтобы os.Create(restoredPath) упал
+	err = os.Mkdir(restoredPath, 0755)
+	require.NoError(t, err)
+
+	resultPath, err := backup.RestoreBackup(
+		context.Background(),
+		backupPath,
+	)
+
+	assert.Error(t, err)
+	assert.Empty(t, resultPath)
+	assert.Contains(t, err.Error(), "ошибка создания восстановленной БД")
+}

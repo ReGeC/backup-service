@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"compress/gzip"
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 )
 
 const Postgres = "postgres"
@@ -142,11 +144,138 @@ func (p *PostgresBackup) newDumpCommand(ctx context.Context) *exec.Cmd {
         "-F", "p",
     )
 
-    cmd.Env = append(cmd.Env,
+    cmd.Env = append(cmd.Environ(),
         "PGPASSWORD="+p.Password,
     )
 
     return cmd
+}
+
+// RestoreBackup восстанавливает бэкап из файла (сжатого gzip) в новую БД.
+// Возвращает имя созданной БД или ошибку.
+func (p *PostgresBackup) RestoreBackup(ctx context.Context, backupPath string) (string, error) {
+	if ctx.Err() != nil {
+		return "", ctx.Err()
+	}
+
+	// 1. Проверяем наличие psql
+	if err := p.checkRestoreDependencies(); err != nil {
+		return "", err
+	}
+
+	// 2. Генерируем имя новой БД
+	newDBName := buildRestoredPath(p.Database)
+
+	// 3. Создаём новую БД
+	if err := p.createDatabase(ctx, newDBName); err != nil {
+		return "", fmt.Errorf("не удалось создать БД %s: %w", newDBName, err)
+	}
+
+	// Если восстановление провалится, удалим созданную БД
+	var restoreErr error
+	defer func() {
+		if restoreErr != nil {
+			_ = p.dropDatabase(ctx, newDBName)
+		}
+	}()
+
+	// 4. Восстанавливаем данные
+	if restoreErr = p.restoreFromFile(ctx, backupPath, newDBName); restoreErr != nil {
+		return "", fmt.Errorf("ошибка восстановления: %w", restoreErr)
+	}
+
+	// 5. Всё ок
+	return newDBName, nil
+}
+
+// checkRestoreDependencies проверяет наличие psql
+func (p *PostgresBackup) checkRestoreDependencies() error {
+	binaries := []string{"psql"}
+	for _, bin := range binaries {
+		if _, err := lookPath(bin); err != nil {
+			return fmt.Errorf("%s not found", bin)
+		}
+	}
+	return nil
+}
+
+
+
+// createDatabase создаёт новую БД через psql
+func (p *PostgresBackup) createDatabase(ctx context.Context, dbName string) error {
+	// Используем psql -c "CREATE DATABASE ..."
+	cmd := commandContext(ctx, "psql",
+		"-h", p.Host,
+		"-p", strconv.Itoa(p.Port),
+		"-U", p.User,
+		"-d", "postgres", // подключаемся к стандартной БД, чтобы создать новую
+		"-c", "CREATE DATABASE "+dbName+";",
+	)
+	cmd.Env = append(cmd.Environ(), "PGPASSWORD="+p.Password)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("psql create database failed: %w, output: %s", err, string(output))
+	}
+	return nil
+}
+
+// dropDatabase удаляет БД (используется при ошибке)
+func (p *PostgresBackup) dropDatabase(ctx context.Context, dbName string) error {
+	cmd := commandContext(ctx, "psql",
+		"-h", p.Host,
+		"-p", strconv.Itoa(p.Port),
+		"-U", p.User,
+		"-d", "postgres",
+		"-c", "DROP DATABASE IF EXISTS "+dbName+";",
+	)
+	cmd.Env = append(cmd.Environ(), "PGPASSWORD="+p.Password)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("ошибка удаления БД: %w, output: %s", err, string(output))
+	}
+	return nil
+}
+
+// restoreFromFile открывает gzip-файл и подаёт распакованный поток в psql
+func (p *PostgresBackup) restoreFromFile(ctx context.Context, backupPath, dbName string) error {
+	// Открываем файл бэкапа
+	file, err := os.Open(backupPath)
+	if err != nil {
+		return fmt.Errorf("не удалось открыть файл бэкапа: %w", err)
+	}
+	defer file.Close()
+
+	// Создаём gzip-ридер
+	gzReader, err := gzip.NewReader(file)
+	if err != nil {
+		return fmt.Errorf("не удалось распаковать gzip: %w", err)
+	}
+	defer gzReader.Close()
+
+	// Запускаем psql с перенаправлением stdin
+	cmd := commandContext(ctx, "psql",
+		"-h", p.Host,
+		"-p", strconv.Itoa(p.Port),
+		"-U", p.User,
+		"-d", dbName,
+		"-q",                 // тихий режим (не выводить лишнего)
+		"-v", "ON_ERROR_STOP=1", // останавливаться при ошибке SQL
+	)
+	cmd.Env = append(cmd.Environ(), "PGPASSWORD="+p.Password)
+	cmd.Stdin = gzReader
+
+	// Собираем stdout и stderr для диагностики
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+	cmd.Stdout = io.Discard // нам не нужен вывод, можно игнорировать
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("psql восстановление завершилось ошибкой: %w, stderr: %s", err, stderr.String())
+	}
+
+	return nil
 }
 
 func (p* PostgresBackup) GetBackupType() string {
