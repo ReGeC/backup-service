@@ -6,8 +6,10 @@ import (
 	mocks "backup-service/internal/storage/mocks"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -585,5 +587,132 @@ func TestYandexS3Storage_Errors(t *testing.T) {
 				mockClient.AssertExpectations(t)
 			})
 		}
+	})
+}
+
+type errorReader struct{}
+
+func (e *errorReader) Read(p []byte) (int, error) {
+	return 0, errors.New("read error")
+}
+
+// TestYandexS3Storage_Download тестирует метод Download
+func TestYandexS3Storage_Download(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("download file successfully", func(t *testing.T) {
+		mockClient := mocks.NewMockS3Client(t)
+
+		s, err := storage.NewYandexS3StorageWithS3Client(mockClient, "test-bucket")
+		require.NoError(t, err)
+
+		content := "test backup content"
+
+		mockClient.On("GetObject", ctx, mock.MatchedBy(func(input *s3.GetObjectInput) bool {
+			return aws.ToString(input.Bucket) == "test-bucket" &&
+				aws.ToString(input.Key) == "backup.zip"
+		})).Return(&s3.GetObjectOutput{
+			Body: io.NopCloser(strings.NewReader(content)),
+		}, nil)
+
+		path, err := s.Download(ctx, "backup.zip")
+
+		require.NoError(t, err)
+		assert.NotEmpty(t, path)
+
+		defer os.Remove(path)
+
+		data, err := os.ReadFile(path)
+		require.NoError(t, err)
+
+		assert.Equal(t, content, string(data))
+
+		mockClient.AssertExpectations(t)
+	})
+
+
+	t.Run("download file not found", func(t *testing.T) {
+		mockClient := mocks.NewMockS3Client(t)
+
+		s, err := storage.NewYandexS3StorageWithS3Client(mockClient, "test-bucket")
+		require.NoError(t, err)
+
+		expectedErr := errors.New("NoSuchKey: The specified key does not exist")
+
+		mockClient.On("GetObject", ctx, mock.Anything).
+			Return(nil, expectedErr)
+
+		path, err := s.Download(ctx, "missing.zip")
+
+		assert.Error(t, err)
+		assert.Empty(t, path)
+
+		assert.ErrorContains(t, err, "Ошибка получения файла из S3")
+		assert.ErrorContains(t, err, expectedErr.Error())
+
+		mockClient.AssertExpectations(t)
+	})
+
+
+	t.Run("download with empty body", func(t *testing.T) {
+		mockClient := mocks.NewMockS3Client(t)
+
+		s, err := storage.NewYandexS3StorageWithS3Client(mockClient, "test-bucket")
+		require.NoError(t, err)
+
+		mockClient.On("GetObject", ctx, mock.Anything).
+			Return(&s3.GetObjectOutput{
+				Body: nil,
+			}, nil)
+
+		path, err := s.Download(ctx, "empty.zip")
+
+		assert.Error(t, err)
+		assert.Empty(t, path)
+
+		assert.ErrorContains(t, err, "пустое тело файла")
+
+		mockClient.AssertExpectations(t)
+	})
+
+
+	t.Run("download with copy error", func(t *testing.T) {
+		mockClient := mocks.NewMockS3Client(t)
+
+		s, err := storage.NewYandexS3StorageWithS3Client(mockClient, "test-bucket")
+		require.NoError(t, err)
+
+		mockClient.On("GetObject", ctx, mock.Anything).
+			Return(&s3.GetObjectOutput{
+				Body: io.NopCloser(&errorReader{}),
+			}, nil)
+
+		path, err := s.Download(ctx, "broken.zip")
+
+		assert.Error(t, err)
+		assert.Empty(t, path)
+
+		assert.ErrorContains(t, err, "Ошибка сохранения файла")
+
+		mockClient.AssertExpectations(t)
+	})
+
+
+	t.Run("download with canceled context", func(t *testing.T) {
+		mockClient := mocks.NewMockS3Client(t)
+
+		s, err := storage.NewYandexS3StorageWithS3Client(mockClient, "test-bucket")
+		require.NoError(t, err)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		path, err := s.Download(ctx, "backup.zip")
+
+		assert.Error(t, err)
+		assert.Empty(t, path)
+		assert.Equal(t, context.Canceled, err)
+
+		mockClient.AssertNotCalled(t, "GetObject")
 	})
 }

@@ -139,3 +139,31 @@ func (l *LocalStorage) Delete(ctx context.Context, path string) error {
 	}
 	return os.Remove(filepath.Join(l.localStoragePath, path))
 }
+
+func (l *LocalStorage) Download(ctx context.Context, path string) (string, error) {
+	if ctx.Err() != nil {
+		return "", ctx.Err()
+	}
+
+	var fullPath string
+
+	if filepath.IsAbs(path) {
+		fullPath = path
+	} else {
+		fullPath = filepath.Join(l.localStoragePath, path)
+	}
+
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("файл бэкапа не найден: %s", fullPath)
+		}
+		return "", fmt.Errorf("проверка файла: %w", err)
+	}
+
+	if info.IsDir() {
+		return "", fmt.Errorf("указанный путь является директорией: %s", fullPath)
+	}
+
+	return fullPath, nil
+}

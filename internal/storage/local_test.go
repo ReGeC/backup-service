@@ -447,3 +447,113 @@ func TestLocalStorage_EdgeCases(t *testing.T) {
 		}
 	})
 }
+
+func TestLocalStorage_Save_CannotCreateDirectory(t *testing.T) {
+	ctx := context.Background()
+
+	tempDir := t.TempDir()
+
+	// Создаем файл вместо директории
+	blocker := filepath.Join(tempDir, "blocked")
+	err := os.WriteFile(blocker, []byte("file"), 0644)
+	require.NoError(t, err)
+
+	srcFile := filepath.Join(tempDir, "backup.zip")
+	err = os.WriteFile(srcFile, []byte("backup"), 0644)
+	require.NoError(t, err)
+
+	s := storage.NewLocalStorage(filepath.Join(blocker, "storage"))
+
+	result, err := s.Save(ctx, srcFile)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	assert.Contains(t, err.Error(), "Ошибка создания папки")
+}
+
+// TestLocalStorage_Download тестирует метод Download
+func TestLocalStorage_Download(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("download existing file by absolute path", func(t *testing.T) {
+		storageDir := t.TempDir()
+
+		filePath := filepath.Join(storageDir, "backup.zip")
+		err := os.WriteFile(filePath, []byte("backup content"), 0644)
+		require.NoError(t, err)
+
+		s := storage.NewLocalStorage(storageDir)
+
+		result, err := s.Download(ctx, filePath)
+
+		require.NoError(t, err)
+		assert.Equal(t, filePath, result)
+
+		_, err = os.Stat(result)
+		assert.NoError(t, err)
+	})
+
+	t.Run("download existing file by relative path", func(t *testing.T) {
+		storageDir := t.TempDir()
+
+		fileName := "backup.zip"
+		filePath := filepath.Join(storageDir, fileName)
+
+		err := os.WriteFile(filePath, []byte("backup content"), 0644)
+		require.NoError(t, err)
+
+		s := storage.NewLocalStorage(storageDir)
+
+		result, err := s.Download(ctx, fileName)
+
+		require.NoError(t, err)
+		assert.Equal(t, filePath, result)
+	})
+
+	t.Run("download file does not exist", func(t *testing.T) {
+		storageDir := t.TempDir()
+
+		s := storage.NewLocalStorage(storageDir)
+
+		result, err := s.Download(ctx, "missing.zip")
+
+		assert.Error(t, err)
+		assert.Empty(t, result)
+		assert.Contains(t, err.Error(), "файл бэкапа не найден")
+	})
+
+	t.Run("download path is directory", func(t *testing.T) {
+		storageDir := t.TempDir()
+
+		dirPath := filepath.Join(storageDir, "backup-dir")
+		err := os.Mkdir(dirPath, 0755)
+		require.NoError(t, err)
+
+		s := storage.NewLocalStorage(storageDir)
+
+		result, err := s.Download(ctx, dirPath)
+
+		assert.Error(t, err)
+		assert.Empty(t, result)
+		assert.Contains(t, err.Error(), "является директорией")
+	})
+
+	t.Run("download with canceled context", func(t *testing.T) {
+		storageDir := t.TempDir()
+
+		filePath := filepath.Join(storageDir, "backup.zip")
+		err := os.WriteFile(filePath, []byte("backup"), 0644)
+		require.NoError(t, err)
+
+		s := storage.NewLocalStorage(storageDir)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		result, err := s.Download(ctx, filePath)
+
+		assert.Error(t, err)
+		assert.Empty(t, result)
+		assert.Equal(t, context.Canceled, err)
+	})
+}

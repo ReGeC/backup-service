@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"io"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +20,7 @@ const YandexS3 = "yandex_s3"
 //go:generate mockery
 type S3Client interface {
 	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
 	ListObjectsV2(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
 }
@@ -140,4 +142,53 @@ func (s *YandexS3Storage) Delete(ctx context.Context, path string) error {
 		return fmt.Errorf("Ошибка удаления из S3: %w", err)
 	}
 	return nil
+}
+
+
+
+func (s *YandexS3Storage) Download(ctx context.Context, path string) (string, error) {
+	if ctx.Err() != nil {
+		return "", ctx.Err()
+	}
+
+	result, err := s.client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(path),
+	})
+	if err != nil {
+		return "", fmt.Errorf("Ошибка получения файла из S3: %w", err)
+	}
+
+	if result.Body == nil {
+		return "", fmt.Errorf("Ошибка получения файла из S3: пустое тело файла")
+	}
+	defer result.Body.Close()
+
+	tempFile, err := os.CreateTemp("", filepath.Base(path))
+	if err != nil {
+		return "", fmt.Errorf("Ошибка создания временного файла: %w", err)
+	}
+
+	tempPath := tempFile.Name()
+
+	success := false
+	defer func() {
+		_ = tempFile.Close()
+
+		if !success {
+			_ = os.Remove(tempPath)
+		}
+	}()
+
+	if _, err := io.Copy(tempFile, result.Body); err != nil {
+		return "", fmt.Errorf("Ошибка сохранения файла: %w", err)
+	}
+
+	if err := tempFile.Close(); err != nil {
+		return "", fmt.Errorf("Ошибка закрытия временного файла: %w", err)
+	}
+
+	success = true
+
+	return tempPath, nil
 }

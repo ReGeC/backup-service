@@ -10,6 +10,7 @@ import (
 //go:generate mockery
 type Storage interface {
 	Save(ctx context.Context, localPath string) (string, error)
+	Download(ctx context.Context, path string) (string, error)
 	List(ctx context.Context) ([]FileInfo, error)
 	Delete(ctx context.Context, path string) error
 }
