@@ -352,7 +352,7 @@ func TestInitDB_WithInMemory(t *testing.T) {
 
 // BenchmarkInitDB бенчмарк инициализации
 func BenchmarkInitDB(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dbName := "bench.db"
 		db, err := database.InitDB(dbName)
 		if err != nil {
