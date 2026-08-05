@@ -23,7 +23,7 @@ func TestBackupConfig_ValidateConfig(t *testing.T) {
 				BackupPath:     "./backups",
 				RetentionDays:  7,
 				CronEnable:     true,
-				BackupSchedule: "0 3 * * *",
+				BackupSchedule: "0 0 3 * * *",
 			},
 			wantErr: nil,
 		},
@@ -108,8 +108,8 @@ func TestNewBackupConfigWithLoader(t *testing.T) {
 		Return(true)
 
 	loader.EXPECT().
-		GetEnv("BACKUP_SCHEDULE", "0 3 * * *").
-		Return("0 5 * * *")
+		GetEnv("CRON_SCHEDULE", "0 0 3 * * *").
+		Return("0 0 5 * * *")
 
 	cfg, err := config.NewBackupConfigWithLoader(loader)
 
@@ -120,7 +120,7 @@ func TestNewBackupConfigWithLoader(t *testing.T) {
 	assert.Equal(t, "/tmp/backups", cfg.BackupPath)
 	assert.Equal(t, 30, cfg.RetentionDays)
 	assert.True(t, cfg.CronEnable)
-	assert.Equal(t, "0 5 * * *", cfg.BackupSchedule)
+	assert.Equal(t, "0 0 5 * * *", cfg.BackupSchedule)
 }
 
 func TestNewBackupConfig (t *testing.T) {
@@ -130,7 +130,7 @@ func TestNewBackupConfig (t *testing.T) {
 		t.Setenv("BACKUP_TEMP_PATH", "/tmp/my-backups")
 		t.Setenv("BACKUP_RETENTION_DAYS", "14")
 		t.Setenv("CRON_ENABLE", "true")
-		t.Setenv("BACKUP_SCHEDULE", "0 2 * * *")
+		t.Setenv("CRON_SCHEDULE", "0 0 2 * * *")
 
 		cfg, err := config.NewBackupConfig()
 
@@ -142,6 +142,6 @@ func TestNewBackupConfig (t *testing.T) {
 		assert.Equal(t, "/tmp/my-backups", cfg.BackupPath)
 		assert.Equal(t, 14, cfg.RetentionDays)
 		assert.True(t, cfg.CronEnable)
-		assert.Equal(t, "0 2 * * *", cfg.BackupSchedule)
+		assert.Equal(t, "0 0 2 * * *", cfg.BackupSchedule)
 	})
 }
