@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"regexp"
 	"strings"
 	"sync"
@@ -58,7 +58,7 @@ func CleanupOldBackups(ctx context.Context, st Storage, retentionDays int) (int,
 		return 0, fmt.Errorf("retention days must be greater than 0")
 	}
 
-	log.Printf("Запуск очистки бэкапов старше %d дней", retentionDays)
+	slog.Info("Запуск очистки бэкапов старше дней", "retentionDays", retentionDays)
 
 	// Получаем список всех файлов
 	files, err := st.List(ctx)
@@ -67,7 +67,7 @@ func CleanupOldBackups(ctx context.Context, st Storage, retentionDays int) (int,
 	}
 
 	if len(files) == 0 {
-		log.Println("Файлов для проверки не найдено")
+		slog.Info("Файлов для проверки не найдено")
 		return 0, nil
 	}
 
@@ -79,7 +79,7 @@ func CleanupOldBackups(ctx context.Context, st Storage, retentionDays int) (int,
 		// Проверяем контекст
 		select {
 		case <-ctx.Done():
-			log.Printf("Очистка прервана: %v", ctx.Err())
+			slog.Error("Очистка прервана", "error", ctx.Err())
 			return deletedCount, ctx.Err()
 		default:
 		}
@@ -88,17 +88,17 @@ func CleanupOldBackups(ctx context.Context, st Storage, retentionDays int) (int,
 		fileDate, err := parseDateFromFilename(file.Name)
 		if err != nil {
 			// Если не удалось распарсить, пропускаем файл
-			log.Printf("Не удалось распарсить дату из файла %s: %v", file.Name, err)
+			slog.Error("Не удалось распарсить дату из файла", "backup_name", file.Name, "error", err)
 			continue
 		}
 
 		// Если файл старше cutoffTime, удаляем
 		if fileDate.Before(cutoffTime) {
-			log.Printf("Удаление старого бэкапа: %s (дата: %s)", 
-				file.Name, fileDate.Format("2006-01-02"))
+			slog.Info("Удаление старого бэкапа", 
+				"backup_name", file.Name, "date", fileDate.Format("2006-01-02"))
 			
 			if err := st.Delete(ctx, file.Name); err != nil {
-				log.Printf("Ошибка удаления файла %s: %v", file.Name, err)
+				slog.Error("Ошибка удаления файла", "backup_name", file.Name, "error", err)
 				errorsCount++
 				continue
 			}
@@ -108,13 +108,13 @@ func CleanupOldBackups(ctx context.Context, st Storage, retentionDays int) (int,
 	}
 
 	if deletedCount > 0 {
-		log.Printf("Удалено %d старых бэкапов (старше %d дней)", deletedCount, retentionDays)
+		slog.Info("Удалены старые бэкапы", "count", deletedCount, "retentionDays", retentionDays)
 	} else {
-		log.Printf("Старых бэкапов (старше %d дней) не найдено", retentionDays)
+		slog.Info("Старых бэкапов не найдено", "retentionDays", retentionDays)
 	}
 
 	if errorsCount > 0 {
-		log.Printf("Ошибок при удалении: %d", errorsCount)
+		slog.Warn("Ошибок при удалении", "errors_count", errorsCount)
 	}
 
 	return deletedCount, nil

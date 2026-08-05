@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 )
@@ -95,7 +95,7 @@ func (l *LocalStorage) copyAndRemove(src, dst string) error {
 
 	if err := out.Sync(); err != nil {
 		// Логируем, но продолжаем
-		log.Printf("WARNING: sync не завершен %s: %v", dst, err)
+		slog.Warn("sync не завершен", "dst_file", dst, "error", err)
 	}
 
 	if err := os.Remove(src); err != nil {

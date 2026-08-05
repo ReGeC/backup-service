@@ -4,7 +4,7 @@ import (
 	"backup-service/internal/config"
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"io"
 	"path/filepath"
@@ -96,12 +96,12 @@ func (s *YandexS3Storage) Save(ctx context.Context, localPath string) (filename 
 	}
 
 	if err := file.Close(); err != nil {
-		log.Printf("WARNING: Не удалось закрыть файл %s: %v", localPath, err)
+		slog.Warn("Не удалось закрыть файл", "filepath", localPath, "error", err)
 	}
 
 	// Удаление локального файла
 	if err := os.Remove(localPath); err != nil {
-		log.Printf("WARNING: Не удалось удалить локальный файл %s: %v", localPath, err)
+		slog.Warn("Не удалось удалить локальный файл", "filepath", localPath, "error", err)
 	}
 
 	return filename, nil

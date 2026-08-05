@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"sync"
 	"time"
@@ -53,7 +53,7 @@ func InitBackuppers() map[string]Backupper {
 		backupper, err := NewBackupper(typ)
 		if err != nil {
 			if !errors.Is(err, ErrDisabled) {
-				log.Printf("Ошибка инициализации %s: %v", typ, err)
+				slog.Error("Ошибка инициализации", "backup_type", typ, "error", err)
 			}
 			continue
 		}
@@ -69,19 +69,19 @@ func saveBackupLog(
 	backupType string,
 ) {
 	if err := repository.CreateLog(logEntry); err != nil {
-		log.Printf("Ошибка сохранения лога для %s: %v", backupType, err)
+		slog.Error("Ошибка сохранения лога", "backup_type", backupType, "error", err)
 	}
 }
 
 func RunBackup(ctx context.Context, backupper Backupper, repository BackupLogRepository, outputDir string, storageType string) (string, error) {
 	typ := backupper.GetBackupType()
 
-	log.Printf("Создание бэкапа %s\n", typ)
+	slog.Info("Создание бэкапа", "backup_type", typ)
 	startTime := time.Now()
 
 	filePath, err := backupper.CreateBackup(ctx, outputDir)
 	if err != nil {
-		log.Printf("Ошибка создания бэкапа %s: %v", typ, err)
+		slog.Error("Ошибка создания бэкапа", "backup_type", typ, "error", err)
 
 		// Логируем ошибку в БД
 		saveBackupLog(repository, &models.BackupLog{
@@ -98,7 +98,7 @@ func RunBackup(ctx context.Context, backupper Backupper, repository BackupLogRep
 	// Получаем размер файла
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		log.Printf("Не удалось получить размер файла %s: %v", filePath, err)
+		slog.Warn("Не удалось получить размер файла", "filepath", filePath, "error", err)
 
 		// Логируем с размером 0, но статус success (бэкап создан)
 		saveBackupLog(repository, &models.BackupLog{
@@ -110,8 +110,8 @@ func RunBackup(ctx context.Context, backupper Backupper, repository BackupLogRep
 		}, typ)
 
 		elapsed := time.Since(startTime)
-		log.Printf("Бэкап %s создан: %s (размер: неизвестен, время: %v)",
-			typ, filePath, elapsed)
+		slog.Info("Бэкап создан:",
+			"backup_type", typ, "filepath", filePath, "time", elapsed)
 
 		return filePath, nil // файл создан, возвращаем путь
 	}
@@ -125,8 +125,9 @@ func RunBackup(ctx context.Context, backupper Backupper, repository BackupLogRep
 	}, typ)
 
 	elapsed := time.Since(startTime)
-	log.Printf("Бэкап %s создан: %s (размер: %.2f MB, время: %v)",
-		typ, filePath, float64(fileInfo.Size())/1024/1024, elapsed)
+	slog.Info("Бэкап создан:",
+		"backup_type", typ, "filepath", filePath, 
+		"size", float64(fileInfo.Size())/1024/1024, "time", elapsed)
 
 	return filePath, nil
 }

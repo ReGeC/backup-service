@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"sync"
 )
 
@@ -39,7 +39,7 @@ func InitNotifiers() map[string]Notifier {
 		notifier, err := NewNotifier(typ)
 		if err != nil {
 			if !errors.Is(err, ErrDisabled) {
-				log.Printf("Ошибка инициализации %s: %v", typ, err)
+				slog.Error("Ошибка инициализации", "notifier", typ, "error", err)
 			}
 			continue
 		}
@@ -53,7 +53,7 @@ func SendAll(notifiers map[string]Notifier, ctx context.Context, message string)
 	for typ, notifier := range notifiers {
 		err := notifier.Send(ctx, message)
 		if err != nil {
-			log.Printf("Уведомление не %s доставлено: %v", typ, err)
+			slog.Warn("Уведомление не доставлено", "notifier", typ, "error", err)
 		}
 	}
 }

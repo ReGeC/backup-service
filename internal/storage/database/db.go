@@ -2,7 +2,7 @@ package database
 
 import (
 	"backup-service/internal/models"
-	"log"
+	"log/slog"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -20,6 +20,6 @@ func InitDB(dbname string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	log.Println("База данных подключена")
+	slog.Info("База данных подключена")
 	return DB, nil
 }

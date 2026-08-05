@@ -2,7 +2,7 @@ package scheduler
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sync"
 
 	"github.com/robfig/cron/v3"
@@ -24,7 +24,7 @@ func New() *Scheduler {
 // Start запускает планировщик
 func (s *Scheduler) Start() {
 	s.cron.Start()
-	log.Println("Планировщик cron запущен")
+	slog.Info("Планировщик cron запущен")
 }
 
 // Stop останавливает планировщик и ожидает завершения текущих задач
@@ -35,7 +35,7 @@ func (s *Scheduler) Stop(ctx context.Context) {
 	
 	stopCtx := s.cron.Stop()
 	<-stopCtx.Done()
-	log.Println("Планировщик cron остановлен")
+	slog.Info("Планировщик cron остановлен")
 }
 
 // AddJob добавляет задачу с расписанием
@@ -48,11 +48,11 @@ func (s *Scheduler) AddJob(spec string, job func()) (cron.EntryID, error) {
 	
 	id, err := s.cron.AddFunc(spec, job)
 	if err != nil {
-		log.Printf("Ошибка добавления задачи с расписанием %s: %v", spec, err)
+		slog.Error("Ошибка добавления задачи с расписанием", "Расписание", spec, "error", err)
 		return id, err
 	}
 	
-	log.Printf("Задача добавлена с расписанием: %s (ID: %d)", spec, id)
+	slog.Info("Задача добавлена", "Рапсписание", spec, "id", id)
 	return id, nil
 }
 
@@ -62,7 +62,7 @@ func (s *Scheduler) RemoveJob(id cron.EntryID) {
 	defer s.mu.Unlock()
 	
 	s.cron.Remove(id)
-	log.Printf("Задача с ID %d удалена", id)
+	slog.Info("Задача удалена", "id", id)
 }
 
 // GetEntries возвращает список всех задач
