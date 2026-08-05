@@ -1,4 +1,3 @@
-// internal/app/app.go
 package app
 
 import (
@@ -25,7 +24,7 @@ type App struct {
     storage    storage.Storage
     backuppers map[string]backup.Backupper
     notifiers  map[string]notifier.Notifier
-    backupRepo *database.GormBackupLogRepository
+    backupRepo backup.BackupLogRepository
     scheduler  *scheduler.Scheduler
     ctx        context.Context
     cancel     context.CancelFunc
@@ -34,33 +33,36 @@ type App struct {
 func New() (*App, error) {
     slog.Info("инициализация приложения")
 
-    // 1. Загрузка конфига
+    // Загрузка конфига
     cfg, err := config.NewBackupConfig()
     if err != nil {
         return nil, fmt.Errorf("загрузка конфига: %w", err)
     }
     slog.Info("конфиг загружен", "cron_enable", cfg.CronEnable)
 
-    // 2. Инициализация БД
+    // Инициализация БД
     db, err := database.InitDB("backup_service.db")
     if err != nil {
         return nil, fmt.Errorf("инициализация БД: %w", err)
     }
     slog.Info("БД инициализирована")
 
-    // 3. Инициализация хранилища
+    // Инициализация хранилища
     st, err := storage.NewStorage(cfg.StorageType)
     if err != nil {
         return nil, fmt.Errorf("создание хранилища: %w", err)
     }
     slog.Info("хранилище создано", "type", cfg.StorageType)
 
-    // 4. Инициализация нотифаеров и бэкапперов
+    // Инициализация нотифаеров и бэкапперов
     notifiers := notifier.InitNotifiers()
     backuppers := backup.InitBackuppers()
     backupRepo := database.NewGormBackupLogRepository(db)
+	scheduler := scheduler.New()
 
-    // 5. Контекст
+	// Инициализация планировщика
+
+    // Контекст
     ctx, cancel := context.WithCancel(context.Background())
 
     return &App{
@@ -70,7 +72,7 @@ func New() (*App, error) {
         backuppers: backuppers,
         notifiers:  notifiers,
         backupRepo: backupRepo,
-        scheduler:  scheduler.New(),
+        scheduler:  scheduler,
         ctx:        ctx,
         cancel:     cancel,
     }, nil
@@ -108,7 +110,6 @@ func (a *App) Start() error {
         defer cleanupCancel()
         a.cleanupOldBackups(cleanupCtx)
     }()
-    time.Sleep(1 * time.Second)
 
     // Добавление задач в планировщик
     backupJob := func() {
@@ -188,7 +189,7 @@ func (a *App) Restore(backupName, backupType string) error {
 }
 
 func (a *App) Stop() error {
-    slog.Info("остановка сервиса (заглушка)")
+    slog.Info("остановка сервиса")
     a.cancel()
     return nil
 }
@@ -262,10 +263,16 @@ func (a *App) cleanupOldBackups(ctx context.Context) {
 func (a *App) waitForShutdown() {
     sigChan := make(chan os.Signal, 1)
     signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
 
-    sig := <-sigChan
-    slog.Info("получен сигнал", "signal", sig)
-    a.cancel()
+    select {
+	case sig := <-sigChan:
+		slog.Info("получен сигнал", "signal", sig)
+		a.cancel()
+
+	case <-a.ctx.Done():
+		slog.Info("получена команда остановки")
+	}
 }
 
 func getCronStringForCleanup() string {
