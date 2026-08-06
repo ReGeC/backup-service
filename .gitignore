@@ -45,7 +45,11 @@ Desktop.ini
 /temp/
 *.tmp
 
-# Backups (ты сказал не надо)
+# Backups
 /backups/
 *.bak
 *.backup
+
+#bin
+/bin/*
+/dist/*
