@@ -2,6 +2,8 @@ package config
 
 import (
 	"errors"
+
+	"backup-service/internal/config/loader"
 )
 
 type BackupConfig struct {
@@ -48,7 +50,7 @@ func (b *BackupConfig) ValidateConfig() error {
 }
 
 func NewBackupConfig() (*BackupConfig, error) {
-	return NewBackupConfigWithLoader(&EnvLoader{})
+	return NewBackupConfigWithLoader(&loader.EnvLoader{})
 }
 
 func NewBackupConfigWithLoader(loader ConfigLoader) (*BackupConfig, error) {

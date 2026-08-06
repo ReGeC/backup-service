@@ -1,6 +1,10 @@
 package config
 
-import "errors"
+import (
+	"errors"
+
+	"backup-service/internal/config/loader"
+)
 
 var ErrEmptySQLitePath = errors.New("sqlite path is empty")
 
@@ -34,7 +38,7 @@ func (s *SQLiteConfig) ValidateConfig() error {
 
 
 func NewSQLiteConfig() (*SQLiteConfig, bool, error) {
-	return NewSQLiteConfigWithLoader(&EnvLoader{})
+	return NewSQLiteConfigWithLoader(&loader.EnvLoader{})
 }
 
 func NewSQLiteConfigWithLoader(loader ConfigLoader) (*SQLiteConfig, bool, error) {

@@ -1,6 +1,10 @@
 package config
 
-import "errors"
+import (
+	"errors"
+
+	"backup-service/internal/config/loader"
+)
 
 var (
 	ErrEmptyPGHost     = errors.New("postgres host is empty")
@@ -57,7 +61,7 @@ func (p *PostgresConfig) ValidateConfig() error {
 }
 
 func NewPostgresConfig() (*PostgresConfig, bool, error) {
-	return NewPostgresConfigWithLoader(&EnvLoader{})
+	return NewPostgresConfigWithLoader(&loader.EnvLoader{})
 }
 
 func NewPostgresConfigWithLoader(loader ConfigLoader) (*PostgresConfig, bool, error) {

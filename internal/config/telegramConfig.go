@@ -1,6 +1,10 @@
 package config
 
-import "errors"
+import (
+	"errors"
+
+	"backup-service/internal/config/loader"
+)
 
 var (
 	ErrEmptyTelegramBotToken = errors.New("telegram bot token is empty")
@@ -40,7 +44,7 @@ func (t *TelegramConfig) ValidateConfig() error {
 }
 
 func NewTelegramConfig() (*TelegramConfig, bool, error) {
-	return NewTelegramConfigWithLoader(&EnvLoader{})
+	return NewTelegramConfigWithLoader(&loader.EnvLoader{})
 }
 
 func NewTelegramConfigWithLoader(loader ConfigLoader) (*TelegramConfig, bool, error) {
