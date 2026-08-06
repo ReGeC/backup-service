@@ -137,28 +137,28 @@ func TestNewPostgresConfigWithLoader(t *testing.T) {
 			loader := mocks.NewMockConfigLoader(t)
 
 			loader.EXPECT().
-				GetEnvAsBool("PG_ENABLE", false).
+				GetBool([]string{"pg", "enable"}, false).
 				Return(tt.pgEnable)
 
 			if tt.pgEnable {
 				loader.EXPECT().
-					GetEnv("PG_HOST", "localhost").
+					GetString([]string{"pg", "host"}, "localhost").
 					Return(tt.pgHost)
 
 				loader.EXPECT().
-					GetEnvAsInt("PG_PORT", 5432).
+					GetInt([]string{"pg", "port"}, 5432).
 					Return(tt.pgPort)
 
 				loader.EXPECT().
-					GetEnv("PG_USER", "postgres").
+					GetString([]string{"pg", "user"}, "postgres").
 					Return(tt.pgUser)
 
 				loader.EXPECT().
-					GetEnv("PG_PASSWORD", "").
+					GetString([]string{"pg", "password"}, "").
 					Return(tt.pgPassword)
 
 				loader.EXPECT().
-					GetEnv("PG_DATABASE", "postgres").
+					GetString([]string{"pg", "database"}, "postgres").
 					Return(tt.pgDatabase)
 			}
 

@@ -13,12 +13,12 @@ type SQLiteConfig struct {
 }
 
 func (s *SQLiteConfig) LoadConfig() (bool, error) {
-	s.SQLiteEnable = s.loader.GetEnvAsBool("SQLITE_ENABLE", false)
+	s.SQLiteEnable = s.loader.GetBool([]string{"sqlite", "enable"}, false)
 	if !s.SQLiteEnable {
 		return false, nil
 	}
 
-	s.SQLitePath = s.loader.GetEnv("SQLITE_PATH", "./test.db")
+	s.SQLitePath = s.loader.GetString([]string{"sqlite", "path"}, "./test.db")
 
 	return true, s.ValidateConfig()
 

@@ -28,11 +28,11 @@ func (s *YandexS3Config) LoadConfig() (bool, error) {
 	// Не добаляем Enable, так как хранилище выбирается только одно
 	// а не подключается как модуль
 	// Оставлено конструкция как у других конфигов на будущее, если вдруг потребуется
-	s.S3Endpoint = s.loader.GetEnv("YANDEX_S3_ENDPOINT", "https://storage.yandexcloud.net")
-	s.S3Bucket = s.loader.GetEnv("YANDEX_S3_BUCKET", "")
-	s.S3Region = s.loader.GetEnv("YANDEX_S3_REGION", "ru-central1")
-	s.S3Key = s.loader.GetEnv("YANDEX_S3_KEY", "")
-	s.S3Secret = s.loader.GetEnv("YANDEX_S3_SECRET", "")
+	s.S3Endpoint = s.loader.GetString([]string{"s3", "yandex", "endpoint"}, "https://storage.yandexcloud.net")
+	s.S3Bucket = s.loader.GetString([]string{"s3", "yandex", "bucket"}, "")
+	s.S3Region = s.loader.GetString([]string{"s3", "yandex", "region"}, "ru-central1")
+	s.S3Key = s.loader.GetString([]string{"s3", "yandex", "key"}, "")
+	s.S3Secret = s.loader.GetString([]string{"s3", "yandex", "secret"}, "")
 
 	return true, s.ValidateConfig()
 }

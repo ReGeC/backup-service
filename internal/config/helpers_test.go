@@ -12,13 +12,13 @@ func TestEnvLoader_GetEnv(t *testing.T) {
 	t.Run("returns environment value", func(t *testing.T) {
 		t.Setenv("TEST_KEY", "hello")
 
-		got := loader.GetEnv("TEST_KEY", "default")
+		got := loader.GetString([]string{"test", "key"}, "default")
 
 		assert.Equal(t, "hello", got)
 	})
 
 	t.Run("returns default value when environment variable does not exist", func(t *testing.T) {
-		got := loader.GetEnv("TEST_KEY_NOT_EXISTS", "default")
+		got := loader.GetString([]string{"test", "key", "not", "exists"}, "default")
 
 		assert.Equal(t, "default", got)
 	})
@@ -62,7 +62,7 @@ func TestEnvLoader_GetEnvAsInt(t *testing.T) {
 				t.Setenv("TEST_INT", tt.envValue)
 			}
 
-			got := loader.GetEnvAsInt("TEST_INT", tt.defaultV)
+			got := loader.GetInt([]string{"test", "int"}, tt.defaultV)
 
 			assert.Equal(t, tt.want, got)
 		})
@@ -114,7 +114,7 @@ func TestEnvLoader_GetEnvAsBool(t *testing.T) {
 				t.Setenv("TEST_BOOL", tt.envValue)
 			}
 
-			got := loader.GetEnvAsBool("TEST_BOOL", tt.defaultV)
+			got := loader.GetBool([]string{"test", "bool"}, tt.defaultV)
 
 			assert.Equal(t, tt.want, got)
 		})

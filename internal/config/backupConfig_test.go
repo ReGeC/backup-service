@@ -92,23 +92,23 @@ func TestNewBackupConfigWithLoader(t *testing.T) {
 	loader := mocks.NewMockConfigLoader(t)
 
 	loader.EXPECT().
-		GetEnv("BACKUP_STORAGE", "local").
+		GetString([]string{"backup", "storage"}, "local").
 		Return("s3")
 
 	loader.EXPECT().
-		GetEnv("BACKUP_TEMP_PATH", "./tmp/backups").
+		GetString([]string{"backup", "temp_path"}, "./tmp/backups").
 		Return("/tmp/backups")
 
 	loader.EXPECT().
-		GetEnvAsInt("BACKUP_RETENTION_DAYS", 7).
+		GetInt([]string{"backup", "retention_days"}, 7).
 		Return(30)
 
 	loader.EXPECT().
-		GetEnvAsBool("CRON_ENABLE", false).
+		GetBool([]string{"cron", "enable"}, false).
 		Return(true)
 
 	loader.EXPECT().
-		GetEnv("CRON_SCHEDULE", "0 0 3 * * *").
+		GetString([]string{"cron", "schedule"}, "0 0 3 * * *").
 		Return("0 0 5 * * *")
 
 	cfg, err := config.NewBackupConfigWithLoader(loader)

@@ -22,16 +22,16 @@ type PostgresConfig struct {
 }
 
 func (p *PostgresConfig) LoadConfig() (bool, error) {
-	p.PGEnable = p.loader.GetEnvAsBool("PG_ENABLE", false)
+	p.PGEnable = p.loader.GetBool([]string{"pg", "enable"}, false)
 	if !p.PGEnable {
 		return false, nil
 	}
 
-	p.PGHost = p.loader.GetEnv("PG_HOST", "localhost")
-	p.PGPort = p.loader.GetEnvAsInt("PG_PORT", 5432)
-	p.PGUser = p.loader.GetEnv("PG_USER", "postgres")
-	p.PGPassword = p.loader.GetEnv("PG_PASSWORD", "")
-	p.PGDatabase = p.loader.GetEnv("PG_DATABASE", "postgres")
+	p.PGHost = p.loader.GetString([]string{"pg", "host"}, "localhost")
+	p.PGPort = p.loader.GetInt([]string{"pg", "port"}, 5432)
+	p.PGUser = p.loader.GetString([]string{"pg", "user"}, "postgres")
+	p.PGPassword = p.loader.GetString([]string{"pg", "password"}, "")
+	p.PGDatabase = p.loader.GetString([]string{"pg", "database"}, "postgres")
 
 	return true, p.ValidateConfig()
 }

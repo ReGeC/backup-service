@@ -35,97 +35,40 @@ func (_m *MockConfigLoader) EXPECT() *MockConfigLoader_Expecter {
 	return &MockConfigLoader_Expecter{mock: &_m.Mock}
 }
 
-// GetEnv provides a mock function for the type MockConfigLoader
-func (_mock *MockConfigLoader) GetEnv(key string, defaultValue string) string {
-	ret := _mock.Called(key, defaultValue)
+// GetBool provides a mock function for the type MockConfigLoader
+func (_mock *MockConfigLoader) GetBool(path []string, defaultValue bool) bool {
+	ret := _mock.Called(path, defaultValue)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetEnv")
-	}
-
-	var r0 string
-	if returnFunc, ok := ret.Get(0).(func(string, string) string); ok {
-		r0 = returnFunc(key, defaultValue)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-	return r0
-}
-
-// MockConfigLoader_GetEnv_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetEnv'
-type MockConfigLoader_GetEnv_Call struct {
-	*mock.Call
-}
-
-// GetEnv is a helper method to define mock.On call
-//   - key string
-//   - defaultValue string
-func (_e *MockConfigLoader_Expecter) GetEnv(key any, defaultValue any) *MockConfigLoader_GetEnv_Call {
-	return &MockConfigLoader_GetEnv_Call{Call: _e.mock.On("GetEnv", key, defaultValue)}
-}
-
-func (_c *MockConfigLoader_GetEnv_Call) Run(run func(key string, defaultValue string)) *MockConfigLoader_GetEnv_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
-		if args[0] != nil {
-			arg0 = args[0].(string)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockConfigLoader_GetEnv_Call) Return(s string) *MockConfigLoader_GetEnv_Call {
-	_c.Call.Return(s)
-	return _c
-}
-
-func (_c *MockConfigLoader_GetEnv_Call) RunAndReturn(run func(key string, defaultValue string) string) *MockConfigLoader_GetEnv_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetEnvAsBool provides a mock function for the type MockConfigLoader
-func (_mock *MockConfigLoader) GetEnvAsBool(key string, defaultValue bool) bool {
-	ret := _mock.Called(key, defaultValue)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetEnvAsBool")
+		panic("no return value specified for GetBool")
 	}
 
 	var r0 bool
-	if returnFunc, ok := ret.Get(0).(func(string, bool) bool); ok {
-		r0 = returnFunc(key, defaultValue)
+	if returnFunc, ok := ret.Get(0).(func([]string, bool) bool); ok {
+		r0 = returnFunc(path, defaultValue)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 	return r0
 }
 
-// MockConfigLoader_GetEnvAsBool_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetEnvAsBool'
-type MockConfigLoader_GetEnvAsBool_Call struct {
+// MockConfigLoader_GetBool_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetBool'
+type MockConfigLoader_GetBool_Call struct {
 	*mock.Call
 }
 
-// GetEnvAsBool is a helper method to define mock.On call
-//   - key string
+// GetBool is a helper method to define mock.On call
+//   - path []string
 //   - defaultValue bool
-func (_e *MockConfigLoader_Expecter) GetEnvAsBool(key any, defaultValue any) *MockConfigLoader_GetEnvAsBool_Call {
-	return &MockConfigLoader_GetEnvAsBool_Call{Call: _e.mock.On("GetEnvAsBool", key, defaultValue)}
+func (_e *MockConfigLoader_Expecter) GetBool(path any, defaultValue any) *MockConfigLoader_GetBool_Call {
+	return &MockConfigLoader_GetBool_Call{Call: _e.mock.On("GetBool", path, defaultValue)}
 }
 
-func (_c *MockConfigLoader_GetEnvAsBool_Call) Run(run func(key string, defaultValue bool)) *MockConfigLoader_GetEnvAsBool_Call {
+func (_c *MockConfigLoader_GetBool_Call) Run(run func(path []string, defaultValue bool)) *MockConfigLoader_GetBool_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
+		var arg0 []string
 		if args[0] != nil {
-			arg0 = args[0].(string)
+			arg0 = args[0].([]string)
 		}
 		var arg1 bool
 		if args[1] != nil {
@@ -139,50 +82,50 @@ func (_c *MockConfigLoader_GetEnvAsBool_Call) Run(run func(key string, defaultVa
 	return _c
 }
 
-func (_c *MockConfigLoader_GetEnvAsBool_Call) Return(b bool) *MockConfigLoader_GetEnvAsBool_Call {
+func (_c *MockConfigLoader_GetBool_Call) Return(b bool) *MockConfigLoader_GetBool_Call {
 	_c.Call.Return(b)
 	return _c
 }
 
-func (_c *MockConfigLoader_GetEnvAsBool_Call) RunAndReturn(run func(key string, defaultValue bool) bool) *MockConfigLoader_GetEnvAsBool_Call {
+func (_c *MockConfigLoader_GetBool_Call) RunAndReturn(run func(path []string, defaultValue bool) bool) *MockConfigLoader_GetBool_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetEnvAsInt provides a mock function for the type MockConfigLoader
-func (_mock *MockConfigLoader) GetEnvAsInt(key string, defaulValue int) int {
-	ret := _mock.Called(key, defaulValue)
+// GetInt provides a mock function for the type MockConfigLoader
+func (_mock *MockConfigLoader) GetInt(path []string, defaultValue int) int {
+	ret := _mock.Called(path, defaultValue)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetEnvAsInt")
+		panic("no return value specified for GetInt")
 	}
 
 	var r0 int
-	if returnFunc, ok := ret.Get(0).(func(string, int) int); ok {
-		r0 = returnFunc(key, defaulValue)
+	if returnFunc, ok := ret.Get(0).(func([]string, int) int); ok {
+		r0 = returnFunc(path, defaultValue)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 	return r0
 }
 
-// MockConfigLoader_GetEnvAsInt_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetEnvAsInt'
-type MockConfigLoader_GetEnvAsInt_Call struct {
+// MockConfigLoader_GetInt_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetInt'
+type MockConfigLoader_GetInt_Call struct {
 	*mock.Call
 }
 
-// GetEnvAsInt is a helper method to define mock.On call
-//   - key string
-//   - defaulValue int
-func (_e *MockConfigLoader_Expecter) GetEnvAsInt(key any, defaulValue any) *MockConfigLoader_GetEnvAsInt_Call {
-	return &MockConfigLoader_GetEnvAsInt_Call{Call: _e.mock.On("GetEnvAsInt", key, defaulValue)}
+// GetInt is a helper method to define mock.On call
+//   - path []string
+//   - defaultValue int
+func (_e *MockConfigLoader_Expecter) GetInt(path any, defaultValue any) *MockConfigLoader_GetInt_Call {
+	return &MockConfigLoader_GetInt_Call{Call: _e.mock.On("GetInt", path, defaultValue)}
 }
 
-func (_c *MockConfigLoader_GetEnvAsInt_Call) Run(run func(key string, defaulValue int)) *MockConfigLoader_GetEnvAsInt_Call {
+func (_c *MockConfigLoader_GetInt_Call) Run(run func(path []string, defaultValue int)) *MockConfigLoader_GetInt_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
+		var arg0 []string
 		if args[0] != nil {
-			arg0 = args[0].(string)
+			arg0 = args[0].([]string)
 		}
 		var arg1 int
 		if args[1] != nil {
@@ -196,12 +139,69 @@ func (_c *MockConfigLoader_GetEnvAsInt_Call) Run(run func(key string, defaulValu
 	return _c
 }
 
-func (_c *MockConfigLoader_GetEnvAsInt_Call) Return(n int) *MockConfigLoader_GetEnvAsInt_Call {
+func (_c *MockConfigLoader_GetInt_Call) Return(n int) *MockConfigLoader_GetInt_Call {
 	_c.Call.Return(n)
 	return _c
 }
 
-func (_c *MockConfigLoader_GetEnvAsInt_Call) RunAndReturn(run func(key string, defaulValue int) int) *MockConfigLoader_GetEnvAsInt_Call {
+func (_c *MockConfigLoader_GetInt_Call) RunAndReturn(run func(path []string, defaultValue int) int) *MockConfigLoader_GetInt_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetString provides a mock function for the type MockConfigLoader
+func (_mock *MockConfigLoader) GetString(path []string, defaultValue string) string {
+	ret := _mock.Called(path, defaultValue)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetString")
+	}
+
+	var r0 string
+	if returnFunc, ok := ret.Get(0).(func([]string, string) string); ok {
+		r0 = returnFunc(path, defaultValue)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	return r0
+}
+
+// MockConfigLoader_GetString_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetString'
+type MockConfigLoader_GetString_Call struct {
+	*mock.Call
+}
+
+// GetString is a helper method to define mock.On call
+//   - path []string
+//   - defaultValue string
+func (_e *MockConfigLoader_Expecter) GetString(path any, defaultValue any) *MockConfigLoader_GetString_Call {
+	return &MockConfigLoader_GetString_Call{Call: _e.mock.On("GetString", path, defaultValue)}
+}
+
+func (_c *MockConfigLoader_GetString_Call) Run(run func(path []string, defaultValue string)) *MockConfigLoader_GetString_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 []string
+		if args[0] != nil {
+			arg0 = args[0].([]string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockConfigLoader_GetString_Call) Return(s string) *MockConfigLoader_GetString_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockConfigLoader_GetString_Call) RunAndReturn(run func(path []string, defaultValue string) string) *MockConfigLoader_GetString_Call {
 	_c.Call.Return(run)
 	return _c
 }

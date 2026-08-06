@@ -41,11 +41,11 @@ func Test_newTelegramNotifier(t *testing.T) {
 			name: "ошибка валидации: пустой токен",
 			setupMock: func(m *configMocks.MockConfigLoader) {
 				// TELEGRAM_ENABLE = true
-				m.On("GetEnvAsBool", "TELEGRAM_ENABLE", false).Return(true)
+				m.On("GetBool", []string{"telegram", "enable"}, false).Return(true)
 				// TELEGRAM_BOT_TOKEN = "" (пустой)
-				m.On("GetEnv", "TELEGRAM_BOT_TOKEN", "").Return("")
+				m.On("GetString", []string{"telegram", "bot_token"}, "").Return("")
 				// TELEGRAM_CHAT_ID = "some_chat"
-				m.On("GetEnv", "TELEGRAM_CHAT_ID", "").Return("some_chat")
+				m.On("GetString", []string{"telegram", "chat_id"}, "").Return("some_chat")
 			},
 			wantErr:     true,
 			expectedErr: config.ErrEmptyTelegramBotToken,
@@ -53,7 +53,7 @@ func Test_newTelegramNotifier(t *testing.T) {
 		{
 			name: "телеграм выключен",
 			setupMock: func(m *configMocks.MockConfigLoader) {
-				m.On("GetEnvAsBool", "TELEGRAM_ENABLE", false).Return(false)
+				m.On("GetBool", []string{"telegram", "enable"}, false).Return(false)
 				// Остальные вызовы не должны происходить, но если произойдут – тест упадёт из-за неожиданных вызовов
 			},
 			wantErr:     true,
@@ -62,9 +62,9 @@ func Test_newTelegramNotifier(t *testing.T) {
 		{
 			name: "успешное создание",
 			setupMock: func(m *configMocks.MockConfigLoader) {
-				m.On("GetEnvAsBool", "TELEGRAM_ENABLE", false).Return(true)
-				m.On("GetEnv", "TELEGRAM_BOT_TOKEN", "").Return("test-token")
-				m.On("GetEnv", "TELEGRAM_CHAT_ID", "").Return("test-chat")
+				m.On("GetBool", []string{"telegram", "enable"}, false).Return(true)
+				m.On("GetString", []string{"telegram", "bot_token"}, "").Return("test-token")
+				m.On("GetString", []string{"telegram", "chat_id"}, "").Return("test-chat")
 			},
 			wantErr:          false,
 			checkNotifier:    true,

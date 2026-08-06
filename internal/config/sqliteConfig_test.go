@@ -73,12 +73,12 @@ func TestNewSQLiteConfigWithLoader(t *testing.T) {
 			loader := mocks.NewMockConfigLoader(t)
 
 			loader.EXPECT().
-				GetEnvAsBool("SQLITE_ENABLE", false).
+				GetBool([]string{"sqlite", "enable"}, false).
 				Return(tt.sqliteEnable)
 
 			if tt.sqliteEnable {
 				loader.EXPECT().
-					GetEnv("SQLITE_PATH", "./test.db").
+					GetString([]string{"sqlite", "path"}, "./test.db").
 					Return(tt.sqlitePath)
 			}
 

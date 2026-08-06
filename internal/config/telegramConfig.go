@@ -17,13 +17,13 @@ type TelegramConfig struct {
 }
 
 func (t *TelegramConfig) LoadConfig() (bool, error) {
-	t.TelegramEnable = t.loader.GetEnvAsBool("TELEGRAM_ENABLE", false)
+	t.TelegramEnable = t.loader.GetBool([]string{"telegram", "enable"}, false)
 	if !t.TelegramEnable {
 		return false, nil
 	}
 
-	t.TelegramBotToken = t.loader.GetEnv("TELEGRAM_BOT_TOKEN", "")
-	t.TelegramChatID = t.loader.GetEnv("TELEGRAM_CHAT_ID", "")
+	t.TelegramBotToken = t.loader.GetString([]string{"telegram", "bot_token"}, "")
+	t.TelegramChatID = t.loader.GetString([]string{"telegram", "chat_id"}, "")
 
 	return true, t.ValidateConfig()
 }

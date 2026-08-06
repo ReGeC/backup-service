@@ -176,23 +176,23 @@ func TestNewYandexS3ConfigWithLoader(t *testing.T) {
 
 			// YandexS3Config всегда загружает все переменные, независимо от enabled
 			loader.EXPECT().
-				GetEnv("YANDEX_S3_ENDPOINT", "https://storage.yandexcloud.net").
+				GetString([]string{"s3", "yandex", "endpoint"}, "https://storage.yandexcloud.net").
 				Return(tt.s3Endpoint)
 
 			loader.EXPECT().
-				GetEnv("YANDEX_S3_BUCKET", "").
+				GetString([]string{"s3", "yandex", "bucket"}, "").
 				Return(tt.s3Bucket)
 
 			loader.EXPECT().
-				GetEnv("YANDEX_S3_REGION", "ru-central1").
+				GetString([]string{"s3", "yandex", "region"}, "ru-central1").
 				Return(tt.s3Region)
 
 			loader.EXPECT().
-				GetEnv("YANDEX_S3_KEY", "").
+				GetString([]string{"s3", "yandex", "key"}, "").
 				Return(tt.s3Key)
 
 			loader.EXPECT().
-				GetEnv("YANDEX_S3_SECRET", "").
+				GetString([]string{"s3", "yandex", "secret"}, "").
 				Return(tt.s3Secret)
 
 			cfg, enabled, err := config.NewYandexS3ConfigWithLoader(loader)
@@ -219,11 +219,11 @@ func TestNewYandexS3ConfigWithLoader(t *testing.T) {
 func TestNewYandexS3Config(t *testing.T) {
 	t.Run("Создание yandex s3 конфига с реальным envloader", func(t *testing.T) {
 		// Устанавливаем переменные окружения для теста
-		t.Setenv("YANDEX_S3_ENDPOINT", "https://storage.yandexcloud.net")
-		t.Setenv("YANDEX_S3_BUCKET", "my-backup-bucket")
-		t.Setenv("YANDEX_S3_REGION", "ru-central1")
-		t.Setenv("YANDEX_S3_KEY", "test-access-key")
-		t.Setenv("YANDEX_S3_SECRET", "test-secret-key")
+		t.Setenv("S3_YANDEX_ENDPOINT", "https://storage.yandexcloud.net")
+		t.Setenv("S3_YANDEX_BUCKET", "my-backup-bucket")
+		t.Setenv("S3_YANDEX_REGION", "ru-central1")
+		t.Setenv("S3_YANDEX_KEY", "test-access-key")
+		t.Setenv("S3_YANDEX_SECRET", "test-secret-key")
 
 		cfg, enabled, err := config.NewYandexS3Config()
 

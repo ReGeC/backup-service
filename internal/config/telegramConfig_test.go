@@ -95,16 +95,16 @@ func TestNewTelegramConfigWithLoader(t *testing.T) {
 			loader := mocks.NewMockConfigLoader(t)
 
 			loader.EXPECT().
-				GetEnvAsBool("TELEGRAM_ENABLE", false).
+				GetBool([]string{"telegram", "enable"}, false).
 				Return(tt.telegramEnable)
 
 			if tt.telegramEnable {
 				loader.EXPECT().
-					GetEnv("TELEGRAM_BOT_TOKEN", "").
+					GetString([]string{"telegram", "bot_token"}, "").
 					Return(tt.telegramBotToken)
 
 				loader.EXPECT().
-					GetEnv("TELEGRAM_CHAT_ID", "").
+					GetString([]string{"telegram", "chat_id"}, "").
 					Return(tt.telegramChatID)
 			}
 

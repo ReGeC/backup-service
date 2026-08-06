@@ -14,7 +14,7 @@ func (l *LocalConfig) LoadConfig() (bool, error) {
 	// Не добаляем Enable, так как хранилище выбирается только одно
 	// а не подключается как модуль
 	// Оставлено конструкция как у других конфигов на будущее, если вдруг потребуется
-	l.LocalStoragePath = l.loader.GetEnv("LOCAL_STORAGE_PATH", "./backups")
+	l.LocalStoragePath = l.loader.GetString([]string{"local_storage", "path"}, "./backups")
 
 	if err := l.ValidateConfig(); err != nil {
 		return false, err

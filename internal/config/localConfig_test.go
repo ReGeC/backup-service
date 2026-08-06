@@ -75,7 +75,7 @@ func TestNewLocalConfigWithLoader(t *testing.T) {
 			loader := mocks.NewMockConfigLoader(t)
 
 			loader.EXPECT().
-				GetEnv("LOCAL_STORAGE_PATH", "./backups").
+				GetString([]string{"local_storage", "path"}, "./backups").
 				Return(tt.envValue)
 
 			cfg, enabled, err := config.NewLocalConfigWithLoader(loader)

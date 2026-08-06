@@ -24,11 +24,11 @@ var (
 
 
 func (b *BackupConfig) LoadConfig() error {
-	b.StorageType = b.loader.GetEnv("BACKUP_STORAGE", "local")
-	b.BackupPath = b.loader.GetEnv("BACKUP_TEMP_PATH", "./tmp/backups")
-	b.RetentionDays = b.loader.GetEnvAsInt("BACKUP_RETENTION_DAYS", 7)
-	b.CronEnable = b.loader.GetEnvAsBool("CRON_ENABLE", false)
-	b.BackupSchedule = b.loader.GetEnv("CRON_SCHEDULE", "0 0 3 * * *")
+	b.StorageType = b.loader.GetString([]string{"backup", "storage"}, "local")
+	b.BackupPath = b.loader.GetString([]string{"backup", "temp_path"}, "./tmp/backups")
+	b.RetentionDays = b.loader.GetInt([]string{"backup", "retention_days"}, 7)
+	b.CronEnable = b.loader.GetBool([]string{"cron", "enable"}, false)
+	b.BackupSchedule = b.loader.GetString([]string{"cron", "schedule"}, "0 0 3 * * *")
 
 	return b.ValidateConfig()
 }
