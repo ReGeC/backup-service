@@ -17,6 +17,7 @@ import (
 	"backup-service/internal/storage"
 	"backup-service/internal/storage/database"
 
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +35,10 @@ type App struct {
 
 func New() (*App, error) {
 	slog.Info("инициализация приложения")
+
+    if err := godotenv.Load(); err != nil {
+        slog.Warn(".env файл не найден, используются переменные по умолчанию")
+    }   
 
 	// Загрузка конфига
 	cfg, err := config.NewBackupConfig()
