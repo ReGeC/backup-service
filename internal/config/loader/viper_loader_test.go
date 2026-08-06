@@ -12,13 +12,13 @@ func TestNewViperLoader(t *testing.T) {
 	dir := t.TempDir()
 
 	config := `
-				backup:
-				  storage: local
-				  retention_days: 14
+backup:
+  storage: local
+  retention_days: 14
 
-				cron:
-				  enable: true
-				`
+cron:
+  enable: true
+`
 
 	configPath := filepath.Join(dir, "config.yaml")
 	err := os.WriteFile(configPath, []byte(config), 0644)
@@ -40,14 +40,14 @@ func TestNewViperLoader_FileNotFound(t *testing.T) {
 func TestViperLoader_GetValues(t *testing.T) {
 	dir := t.TempDir()
 
-	config := `
-				backup:
-				  storage: local
-				  retention_days: 30
+config := `
+backup:
+  storage: local
+  retention_days: 30
 
-				cron:
-				  enable: true
-				`
+cron:
+  enable: true
+`
 
 	configPath := filepath.Join(dir, "config.yaml")
 	err := os.WriteFile(configPath, []byte(config), 0644)
