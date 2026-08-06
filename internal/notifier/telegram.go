@@ -2,7 +2,6 @@ package notifier
 
 import (
 	"backup-service/internal/config"
-	"backup-service/internal/config/loader"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -16,7 +15,7 @@ const Telegram = "telegram"
 
 var ErrTelegramDisabled = errors.Join(ErrDisabled, errors.New(Telegram))
 
-var telegramConfigLoader config.ConfigLoader = &loader.EnvLoader{}
+var telegramGetConfigLoader = config.GetConfigLoader
 
 func init() {
 	// Автоматическая регистрация при импорте
@@ -24,11 +23,11 @@ func init() {
 }
 
 func newTelegramNotifier() (Notifier, error) {
-	cfg, enabled, err := config.NewTelegramConfigWithLoader(telegramConfigLoader)
+	cfg, enabled, err := config.NewTelegramConfigWithLoader(telegramGetConfigLoader())
+
 	if err != nil {
 		return nil, err
 	}
-
 	if !enabled {
 		return nil, ErrTelegramDisabled
 	}

@@ -80,9 +80,15 @@ func Test_newTelegramNotifier(t *testing.T) {
 			mockLoader := configMocks.NewMockConfigLoader(t)
 			tt.setupMock(mockLoader)
 
-			originalLoader := telegramConfigLoader
-			telegramConfigLoader = mockLoader
-			t.Cleanup(func() { telegramConfigLoader = originalLoader })
+			telegramGetConfigLoader = func () config.ConfigLoader {
+				return mockLoader
+			}
+
+			originalGetConfigLoader := telegramGetConfigLoader
+			telegramGetConfigLoader = func () config.ConfigLoader {
+				return mockLoader
+			}
+			t.Cleanup(func() { telegramGetConfigLoader = originalGetConfigLoader })
 
 			notifier, err := newTelegramNotifier()
 
