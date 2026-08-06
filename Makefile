@@ -12,8 +12,7 @@ LDFLAGS := -s -w \
 .PHONY: build release clean linux windows darwin darwin-arm test fmt
 
 build:
-	@mkdir -p bin
-	go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(APP) .
+	go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(APP).exe .
 
 linux:
 	@mkdir -p dist

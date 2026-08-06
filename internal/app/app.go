@@ -38,7 +38,7 @@ func New() (*App, error) {
 
     if err := godotenv.Load(); err != nil {
         slog.Warn(".env файл не найден, используются переменные по умолчанию")
-    }   
+    }
 
 	// Загрузка конфига
 	cfg, err := config.NewBackupConfig()
@@ -60,6 +60,11 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("создание хранилища: %w", err)
 	}
 	slog.Info("хранилище создано", "type", cfg.StorageType)
+
+    // Создание папки бэкапов если её нет
+	if err := os.MkdirAll(cfg.BackupPath, 0755); err != nil {
+		return nil, fmt.Errorf("Ошибка создания папки %s: %v", cfg.BackupPath, err)
+	}
 
 	// Инициализация нотифаеров и бэкапперов
 	notifiers := notifier.InitNotifiers()
@@ -214,6 +219,8 @@ func (a *App) List() error {
 		return nil
 	}
 
+    fmt.Printf("\n\n\n")
+
 	fmt.Printf("%-50s %-10s %-20s\n", "NAME", "SIZE", "CREATED")
 	fmt.Println(strings.Repeat("-", 85))
 
@@ -225,6 +232,8 @@ func (a *App) List() error {
 			file.CreatedAt.Format("2006-01-02 15:04:05"),
 		)
 	}
+
+    fmt.Printf("\n\n\n")
 
 	return nil
 }
