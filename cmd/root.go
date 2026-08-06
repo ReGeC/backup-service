@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configPath string = "./config.yaml"
+var configPath string
 
 var rootCmd = &cobra.Command{
 	Use:   "backup-service",
@@ -24,4 +24,8 @@ func Execute() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func init() {
+	rootCmd.PersistentFlags().StringVar(&configPath, "config", "./config.yaml", "Config path")
 }

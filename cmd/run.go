@@ -22,8 +22,5 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	restoreCmd.Flags().StringVar(&configPath, "config", "", "Config path")
-	_ = restoreCmd.MarkFlagRequired("config")
-
 	rootCmd.AddCommand(runCmd)
 }

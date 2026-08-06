@@ -32,11 +32,9 @@ var restoreCmd = &cobra.Command{
 func init() {
 	restoreCmd.Flags().StringVar(&restoreBackup, "backup", "", "Backup file")
 	restoreCmd.Flags().StringVar(&restoreType, "type", "", "Backup type")
-	restoreCmd.Flags().StringVar(&configPath, "config", "", "Config path")
 
 	_ = restoreCmd.MarkFlagRequired("backup")
 	_ = restoreCmd.MarkFlagRequired("type")
-	_ = restoreCmd.MarkFlagRequired("config")
 
 	rootCmd.AddCommand(restoreCmd)
 }
