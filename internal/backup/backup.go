@@ -24,7 +24,7 @@ type Backupper interface {
 
 //go:generate mockery
 type BackupLogRepository interface {
-    CreateLog(*models.BackupLog) error
+	CreateLog(*models.BackupLog) error
 }
 
 // Глобальная хешмапа регистра
@@ -126,7 +126,7 @@ func RunBackup(ctx context.Context, backupper Backupper, repository BackupLogRep
 
 	elapsed := time.Since(startTime)
 	slog.Info("Бэкап создан:",
-		"backup_type", typ, "filepath", filePath, 
+		"backup_type", typ, "filepath", filePath,
 		"size", float64(fileInfo.Size())/1024/1024, "time", elapsed)
 
 	return filePath, nil
@@ -135,7 +135,7 @@ func RunBackup(ctx context.Context, backupper Backupper, repository BackupLogRep
 func NewBackupper(typ string) (Backupper, error) {
 	mu.RLock()
 	defer mu.RUnlock()
-	
+
 	factory, exists := registry[typ]
 	if !exists {
 		return nil, fmt.Errorf("Неподдерживаемый тип бэкапа: %s", typ)

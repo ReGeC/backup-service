@@ -4,9 +4,9 @@ import (
 	"backup-service/internal/config"
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
-	"io"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -62,9 +62,6 @@ func NewYandexS3StorageWithS3Client(client S3Client, bucket string) (*YandexS3St
 	}, nil
 }
 
-
-
-
 func (s *YandexS3Storage) Save(ctx context.Context, localPath string) (filename string, err error) {
 	// Проверка существования файла
 	if _, err := os.Stat(localPath); err != nil {
@@ -107,9 +104,6 @@ func (s *YandexS3Storage) Save(ctx context.Context, localPath string) (filename 
 	return filename, nil
 }
 
-
-
-
 func (s *YandexS3Storage) List(ctx context.Context) ([]FileInfo, error) {
 	result, err := s.client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 		Bucket: aws.String(s.bucket),
@@ -130,9 +124,6 @@ func (s *YandexS3Storage) List(ctx context.Context) ([]FileInfo, error) {
 	return files, nil
 }
 
-
-
-
 func (s *YandexS3Storage) Delete(ctx context.Context, path string) error {
 	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
@@ -143,8 +134,6 @@ func (s *YandexS3Storage) Delete(ctx context.Context, path string) error {
 	}
 	return nil
 }
-
-
 
 func (s *YandexS3Storage) Download(ctx context.Context, path string) (string, error) {
 	if ctx.Err() != nil {

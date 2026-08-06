@@ -11,7 +11,7 @@ import (
 func TestNewViperLoader(t *testing.T) {
 	dir := t.TempDir()
 
-	config := 	`
+	config := `
 				backup:
 				  storage: local
 				  retention_days: 14
@@ -40,7 +40,7 @@ func TestNewViperLoader_FileNotFound(t *testing.T) {
 func TestViperLoader_GetValues(t *testing.T) {
 	dir := t.TempDir()
 
-	config := 	`
+	config := `
 				backup:
 				  storage: local
 				  retention_days: 30

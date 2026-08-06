@@ -36,7 +36,6 @@ func (s *SQLiteConfig) ValidateConfig() error {
 	return nil
 }
 
-
 func NewSQLiteConfig() (*SQLiteConfig, bool, error) {
 	return NewSQLiteConfigWithLoader(&loader.EnvLoader{})
 }

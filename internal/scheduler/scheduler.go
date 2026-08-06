@@ -50,13 +50,13 @@ func (s *Scheduler) Stop(ctx context.Context) {
 func (s *Scheduler) AddJob(spec string, job func()) (cron.EntryID, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	id, err := s.cron.AddFunc(spec, job)
 	if err != nil {
 		slog.Error("Ошибка добавления задачи с расписанием", "Расписание", spec, "error", err)
 		return id, err
 	}
-	
+
 	slog.Info("Задача добавлена", "Рапсписание", spec, "id", id)
 	return id, nil
 }
@@ -65,7 +65,7 @@ func (s *Scheduler) AddJob(spec string, job func()) (cron.EntryID, error) {
 func (s *Scheduler) RemoveJob(id cron.EntryID) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	s.cron.Remove(id)
 	slog.Info("Задача удалена", "id", id)
 }

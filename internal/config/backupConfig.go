@@ -18,12 +18,10 @@ type BackupConfig struct {
 }
 
 var (
-	ErrEmptyBackupPath = errors.New("backup path is empty")
+	ErrEmptyBackupPath  = errors.New("backup path is empty")
 	ErrInvalidRetention = errors.New("retention days must be greater than 0")
-	ErrEmptySchedule = errors.New("backup schedule is empty")
+	ErrEmptySchedule    = errors.New("backup schedule is empty")
 )
-
-
 
 func (b *BackupConfig) LoadConfig() error {
 	b.StorageType = b.loader.GetString([]string{"backup", "storage"}, "local")

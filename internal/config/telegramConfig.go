@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrEmptyTelegramBotToken = errors.New("telegram bot token is empty")
-	ErrEmptyTelegramChatID = errors.New("telegram chat id is empty")
+	ErrEmptyTelegramChatID   = errors.New("telegram chat id is empty")
 )
 
 type TelegramConfig struct {

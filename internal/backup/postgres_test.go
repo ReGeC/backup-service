@@ -262,32 +262,31 @@ func TestGetBackupType(t *testing.T) {
 }
 
 func TestNewPostgresBackupper(t *testing.T) {
-    t.Run("success", func(t *testing.T) {
-        t.Setenv("PG_ENABLE", "true")
-        
-        backupper, err := newPostgresBackupper()
-        require.NoError(t, err)
-        assert.NotNil(t, backupper)
-    })
+	t.Run("success", func(t *testing.T) {
+		t.Setenv("PG_ENABLE", "true")
 
-    t.Run("disabled", func(t *testing.T) {
-        t.Setenv("PG_ENABLE", "false")
-        
-        backupper, err := newPostgresBackupper()
-        assert.ErrorIs(t, err, ErrDisabled)
-        assert.Nil(t, backupper)
-    })
+		backupper, err := newPostgresBackupper()
+		require.NoError(t, err)
+		assert.NotNil(t, backupper)
+	})
 
-    t.Run("config error", func(t *testing.T) {
-        t.Setenv("PG_ENABLE", "true")
-        t.Setenv("PG_HOST", "") // вызываем ошибку валидации
-        
-        backupper, err := newPostgresBackupper()
-        assert.Error(t, err)
-        assert.Nil(t, backupper)
-    })
+	t.Run("disabled", func(t *testing.T) {
+		t.Setenv("PG_ENABLE", "false")
+
+		backupper, err := newPostgresBackupper()
+		assert.ErrorIs(t, err, ErrDisabled)
+		assert.Nil(t, backupper)
+	})
+
+	t.Run("config error", func(t *testing.T) {
+		t.Setenv("PG_ENABLE", "true")
+		t.Setenv("PG_HOST", "") // вызываем ошибку валидации
+
+		backupper, err := newPostgresBackupper()
+		assert.Error(t, err)
+		assert.Nil(t, backupper)
+	})
 }
-
 
 func TestHelperPSQLProcess(t *testing.T) {
 	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
@@ -510,5 +509,3 @@ func TestRestoreBackup_RestoreError(t *testing.T) {
 	assert.Empty(t, db)
 	assert.Contains(t, err.Error(), "ошибка восстановления")
 }
-
-

@@ -458,6 +458,7 @@ func TestYandexS3Storage_FullLifecycle(t *testing.T) {
 		mockClient.AssertExpectations(t)
 	})
 }
+
 // TestYandexS3Storage_Errors тестирует обработку ошибок
 // TestYandexS3Storage_Errors тестирует обработку ошибок
 func TestYandexS3Storage_Errors(t *testing.T) {
@@ -630,7 +631,6 @@ func TestYandexS3Storage_Download(t *testing.T) {
 		mockClient.AssertExpectations(t)
 	})
 
-
 	t.Run("download file not found", func(t *testing.T) {
 		mockClient := mocks.NewMockS3Client(t)
 
@@ -653,7 +653,6 @@ func TestYandexS3Storage_Download(t *testing.T) {
 		mockClient.AssertExpectations(t)
 	})
 
-
 	t.Run("download with empty body", func(t *testing.T) {
 		mockClient := mocks.NewMockS3Client(t)
 
@@ -675,7 +674,6 @@ func TestYandexS3Storage_Download(t *testing.T) {
 		mockClient.AssertExpectations(t)
 	})
 
-
 	t.Run("download with copy error", func(t *testing.T) {
 		mockClient := mocks.NewMockS3Client(t)
 
@@ -696,7 +694,6 @@ func TestYandexS3Storage_Download(t *testing.T) {
 
 		mockClient.AssertExpectations(t)
 	})
-
 
 	t.Run("download with canceled context", func(t *testing.T) {
 		mockClient := mocks.NewMockS3Client(t)

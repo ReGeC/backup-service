@@ -19,11 +19,10 @@ type Storage interface {
 }
 
 type FileInfo struct {
-	Name string
-	Size int64
+	Name      string
+	Size      int64
 	CreatedAt time.Time
 }
-
 
 var registry = map[string]func() (Storage, error){}
 var mu sync.RWMutex
@@ -94,15 +93,15 @@ func CleanupOldBackups(ctx context.Context, st Storage, retentionDays int) (int,
 
 		// Если файл старше cutoffTime, удаляем
 		if fileDate.Before(cutoffTime) {
-			slog.Info("Удаление старого бэкапа", 
+			slog.Info("Удаление старого бэкапа",
 				"backup_name", file.Name, "date", fileDate.Format("2006-01-02"))
-			
+
 			if err := st.Delete(ctx, file.Name); err != nil {
 				slog.Error("Ошибка удаления файла", "backup_name", file.Name, "error", err)
 				errorsCount++
 				continue
 			}
-			
+
 			deletedCount++
 		}
 	}
@@ -122,18 +121,18 @@ func CleanupOldBackups(ctx context.Context, st Storage, retentionDays int) (int,
 
 // parseDateFromFilename парсит дату из имени файла в формате db_2026-08-05_06-56_postgres.sql.gz
 func parseDateFromFilename(filename string) (time.Time, error) {
-		// Проверяем, что файл начинается с "db_"
+	// Проверяем, что файл начинается с "db_"
 	if !strings.HasPrefix(filename, "db_") {
 		return time.Time{}, fmt.Errorf("файл не является бэкапом БД: %s", filename)
 	}
-	
+
 	// Ищем паттерн: 4 цифры-2 цифры-2 цифры (YYYY-MM-DD)
 	re := regexp.MustCompile(`(\d{4}-\d{2}-\d{2})`)
 	matches := re.FindStringSubmatch(filename)
 	if len(matches) < 2 {
 		return time.Time{}, fmt.Errorf("дата не найдена в имени файла: %s", filename)
 	}
-	
+
 	dateStr := matches[1]
 	return time.Parse("2006-01-02", dateStr)
 }

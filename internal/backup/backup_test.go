@@ -47,8 +47,8 @@ func TestRunBackup_Success(t *testing.T) {
 
 	backupper.EXPECT().
 		GetBackupType().
-    	Return("postgres").
-    	Once()
+		Return("postgres").
+		Once()
 
 	repository.
 		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
@@ -94,8 +94,8 @@ func TestRunBackup_CreateBackupError(t *testing.T) {
 
 	backupper.EXPECT().
 		GetBackupType().
-    	Return("postgres").
-    	Once()
+		Return("postgres").
+		Once()
 
 	repository.
 		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
@@ -146,8 +146,8 @@ func TestRunBackup_StatError(t *testing.T) {
 
 	backupper.EXPECT().
 		GetBackupType().
-    	Return("postgres").
-    	Once()
+		Return("postgres").
+		Once()
 
 	repository.
 		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
@@ -205,8 +205,8 @@ func TestRunBackup_RepositoryError(t *testing.T) {
 
 	backupper.EXPECT().
 		GetBackupType().
-    	Return("postgres").
-    	Once()
+		Return("postgres").
+		Once()
 
 	repository.
 		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
@@ -247,8 +247,8 @@ func TestRunBackup_RepositoryErrorAfterBackupFailure(t *testing.T) {
 
 	backupper.EXPECT().
 		GetBackupType().
-    	Return("postgres").
-    	Once()
+		Return("postgres").
+		Once()
 
 	repository.
 		On("CreateLog", mock.AnythingOfType("*models.BackupLog")).
@@ -345,20 +345,20 @@ func TestInitBackuppers(t *testing.T) {
 }
 
 func TestInitBackuppers_Disabled(t *testing.T) {
-    resetRegistry(t)
+	resetRegistry(t)
 
-    backup.Register("disabled", func() (backup.Backupper, error) {
-        return nil, backup.ErrDisabled
-    })
+	backup.Register("disabled", func() (backup.Backupper, error) {
+		return nil, backup.ErrDisabled
+	})
 
-    result := backup.InitBackuppers()
+	result := backup.InitBackuppers()
 
-    assert.Empty(t, result)
+	assert.Empty(t, result)
 }
 
 func TestRegister_OverridesExistingFactory(t *testing.T) {
 	resetRegistry(t)
-	
+
 	typ := "test-register-override"
 
 	first := mocks.NewMockBackupper(t)

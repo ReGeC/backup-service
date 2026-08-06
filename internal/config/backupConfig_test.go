@@ -12,10 +12,10 @@ import (
 
 func TestBackupConfig_ValidateConfig(t *testing.T) {
 	tests := []struct {
-		name string
-		config config.BackupConfig
+		name    string
+		config  config.BackupConfig
 		wantErr error
-	} {
+	}{
 		{
 			name: "valid config",
 			config: config.BackupConfig{
@@ -123,8 +123,8 @@ func TestNewBackupConfigWithLoader(t *testing.T) {
 	assert.Equal(t, "0 0 5 * * *", cfg.BackupSchedule)
 }
 
-func TestNewBackupConfig (t *testing.T) {
-	t.Run("Создание backup конфига с реальным envloader", func (t *testing.T) {
+func TestNewBackupConfig(t *testing.T) {
+	t.Run("Создание backup конфига с реальным envloader", func(t *testing.T) {
 		// Устанавливаем переменные окружения для теста
 		t.Setenv("BACKUP_STORAGE", "s3")
 		t.Setenv("BACKUP_TEMP_PATH", "/tmp/my-backups")

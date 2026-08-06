@@ -10,6 +10,7 @@ import (
 )
 
 const SQLite = "sqlite"
+
 var ErrSQLiteDisabled = errors.Join(ErrDisabled, errors.New(SQLite))
 
 func init() {
@@ -18,16 +19,16 @@ func init() {
 }
 
 func newSQLiteBackupper() (Backupper, error) {
-    cfg, enabled, err := config.NewSQLiteConfig()
-    if err != nil {
-        return nil, err
-    }
-	
-	if !enabled {
-        return nil, ErrSQLiteDisabled
-    }
+	cfg, enabled, err := config.NewSQLiteConfig()
+	if err != nil {
+		return nil, err
+	}
 
-    return NewSQLiteBackup(cfg.SQLitePath), nil
+	if !enabled {
+		return nil, ErrSQLiteDisabled
+	}
+
+	return NewSQLiteBackup(cfg.SQLitePath), nil
 }
 
 type SQLiteBackup struct {
@@ -44,16 +45,16 @@ func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (full
 	if ctx.Err() != nil {
 		return "", ctx.Err()
 	}
-	
+
 	fullPath = buildBackupPath(SQLite, outputDir)
 
 	// Проверка на существование БД
 	if _, err := os.Stat(s.DBPath); err != nil {
-        if os.IsNotExist(err) {
-            return "", fmt.Errorf("файл БД не найден: %s", s.DBPath)
-        }
-        return "", fmt.Errorf("проверка файла БД: %w", err)
-    }
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("файл БД не найден: %s", s.DBPath)
+		}
+		return "", fmt.Errorf("проверка файла БД: %w", err)
+	}
 
 	// Копируем файл
 	srcFile, err := os.Open(s.DBPath)
@@ -64,17 +65,17 @@ func (s *SQLiteBackup) CreateBackup(ctx context.Context, outputDir string) (full
 
 	dstFile, err := os.Create(fullPath)
 	if err != nil {
-	    return "", fmt.Errorf("ошибка создания бэкапа: %w", err)
+		return "", fmt.Errorf("ошибка создания бэкапа: %w", err)
 	}
 	// Обработка ошибки записи в файл
 	defer func() {
-	    if closeErr := dstFile.Close(); err == nil && closeErr != nil {
-	        err = fmt.Errorf("ошибка закрытия файла: %w", closeErr)
-	    }
+		if closeErr := dstFile.Close(); err == nil && closeErr != nil {
+			err = fmt.Errorf("ошибка закрытия файла: %w", closeErr)
+		}
 
-	    if err != nil {
-	        _ = os.Remove(dstFile.Name())
-	    }
+		if err != nil {
+			_ = os.Remove(dstFile.Name())
+		}
 	}()
 
 	_, err = io.Copy(dstFile, srcFile)
@@ -99,7 +100,7 @@ func (s *SQLiteBackup) RestoreBackup(ctx context.Context, backupPath string) (st
 	}
 
 	// Формируем имя восстановленной БД
-	restoredPath := buildRestoredPath(s.DBPath)+".db"
+	restoredPath := buildRestoredPath(s.DBPath) + ".db"
 
 	srcFile, err := os.Open(backupPath)
 	if err != nil {
@@ -130,7 +131,6 @@ func (s *SQLiteBackup) RestoreBackup(ctx context.Context, backupPath string) (st
 	return restoredPath, nil
 }
 
-
-func (s* SQLiteBackup) GetBackupType() string {
+func (s *SQLiteBackup) GetBackupType() string {
 	return SQLite
 }

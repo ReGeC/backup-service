@@ -6,8 +6,8 @@ import (
 	"backup-service/internal/config"
 	mocks "backup-service/internal/config/mocks"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTelegramConfig_ValidateConfig(t *testing.T) {
@@ -70,11 +70,11 @@ func TestTelegramConfig_ValidateConfig(t *testing.T) {
 
 func TestNewTelegramConfigWithLoader(t *testing.T) {
 	tests := []struct {
-		name              string
-		telegramEnable    bool
-		telegramBotToken  string
-		telegramChatID    string
-		wantEnabled       bool
+		name             string
+		telegramEnable   bool
+		telegramBotToken string
+		telegramChatID   string
+		wantEnabled      bool
 	}{
 		{
 			name:           "telegram disabled",
@@ -134,7 +134,7 @@ func TestNewTelegramConfig(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)
 		assert.NotNil(t, enabled)
-		
+
 		// Проверяем, что поля установились корректно
 		assert.Equal(t, "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11", cfg.TelegramBotToken)
 		assert.Equal(t, "123456789", cfg.TelegramChatID)

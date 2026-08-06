@@ -6,87 +6,87 @@ import (
 	"backup-service/internal/config"
 	mocks "backup-service/internal/config/mocks"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPotgresConfig_ValidateConfig(t *testing.T) {
 	tests := []struct {
-		name        string
-		config      config.PostgresConfig
-		wantErr     error
-	} {
+		name    string
+		config  config.PostgresConfig
+		wantErr error
+	}{
 		{
-			name:        "valid config",
+			name: "valid config",
 			config: config.PostgresConfig{
-				PGEnable:    true,
-				PGHost:      "localhost",
-				PGPort:      5432,
-				PGUser:      "postgres",
-				PGPassword:  "password",
-				PGDatabase:  "backup",
+				PGEnable:   true,
+				PGHost:     "localhost",
+				PGPort:     5432,
+				PGUser:     "postgres",
+				PGPassword: "password",
+				PGDatabase: "backup",
 			},
-			wantErr:     nil,
+			wantErr: nil,
 		},
 		{
-			name:        "empty host",
+			name: "empty host",
 			config: config.PostgresConfig{
-				PGEnable:    true,
-				PGHost:      "",
-				PGPort:      5432,
-				PGUser:      "postgres",
-				PGPassword:  "password",
-				PGDatabase:  "backup",
+				PGEnable:   true,
+				PGHost:     "",
+				PGPort:     5432,
+				PGUser:     "postgres",
+				PGPassword: "password",
+				PGDatabase: "backup",
 			},
-			wantErr:     config.ErrEmptyPGHost,
+			wantErr: config.ErrEmptyPGHost,
 		},
 		{
-			name:        "port is zero",
+			name: "port is zero",
 			config: config.PostgresConfig{
-				PGEnable:    true,
-				PGHost:      "localhost",
-				PGPort:      0,
-				PGUser:      "postgres",
-				PGPassword:  "password",
-				PGDatabase:  "backup",
+				PGEnable:   true,
+				PGHost:     "localhost",
+				PGPort:     0,
+				PGUser:     "postgres",
+				PGPassword: "password",
+				PGDatabase: "backup",
 			},
-			wantErr:     config.ErrInvalidPGPort,
+			wantErr: config.ErrInvalidPGPort,
 		},
 		{
-			name:        "port is greater than maximum",
+			name: "port is greater than maximum",
 			config: config.PostgresConfig{
-				PGEnable:    true,
-				PGHost:      "localhost",
-				PGPort:      65536,
-				PGUser:      "postgres",
-				PGPassword:  "password",
-				PGDatabase:  "backup",
+				PGEnable:   true,
+				PGHost:     "localhost",
+				PGPort:     65536,
+				PGUser:     "postgres",
+				PGPassword: "password",
+				PGDatabase: "backup",
 			},
-			wantErr:     config.ErrInvalidPGPort,
+			wantErr: config.ErrInvalidPGPort,
 		},
 		{
-			name:        "empty user",
+			name: "empty user",
 			config: config.PostgresConfig{
-				PGEnable:    true,
-				PGHost:      "localhost",
-				PGPort:      5432,
-				PGUser:      "",
-				PGPassword:  "password",
-				PGDatabase:  "backup",
+				PGEnable:   true,
+				PGHost:     "localhost",
+				PGPort:     5432,
+				PGUser:     "",
+				PGPassword: "password",
+				PGDatabase: "backup",
 			},
-			wantErr:     config.ErrEmptyPGUser,
+			wantErr: config.ErrEmptyPGUser,
 		},
 		{
-			name:        "empty database",
+			name: "empty database",
 			config: config.PostgresConfig{
-				PGEnable:    true,
-				PGHost:      "localhost",
-				PGPort:      5432,
-				PGUser:      "postgres",
-				PGPassword:  "password",
-				PGDatabase:  "",
+				PGEnable:   true,
+				PGHost:     "localhost",
+				PGPort:     5432,
+				PGUser:     "postgres",
+				PGPassword: "password",
+				PGDatabase: "",
 			},
-			wantErr:     config.ErrEmptyPGDatabase,
+			wantErr: config.ErrEmptyPGDatabase,
 		},
 	}
 
@@ -179,8 +179,8 @@ func TestNewPostgresConfigWithLoader(t *testing.T) {
 	}
 }
 
-func TestNewPostgresConfig (t *testing.T) {
-	t.Run("Создание postgres конфига с реальным envloader", func (t *testing.T) {
+func TestNewPostgresConfig(t *testing.T) {
+	t.Run("Создание postgres конфига с реальным envloader", func(t *testing.T) {
 		// Устанавливаем переменные окружения для теста
 		t.Setenv("PG_ENABLE", "true")
 		t.Setenv("PG_HOST", "localhost")

@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	ErrEmptyS3Endpoint = errors.New("yandex_s3 endpoint is empty")
+	ErrEmptyS3Endpoint   = errors.New("yandex_s3 endpoint is empty")
 	ErrInvalidS3Endpoint = errors.New("yandex_s3 endpoint invalid")
-	ErrEmptyS3Bucket   = errors.New("yandex_s3 bucket is empty")
-	ErrEmptyS3Region   = errors.New("yandex_s3 region is empty")
-	ErrEmptyS3Key      = errors.New("yandex_s3 key is empty")
-	ErrEmptyS3Secret   = errors.New("yandex_s3 secret is empty")
+	ErrEmptyS3Bucket     = errors.New("yandex_s3 bucket is empty")
+	ErrEmptyS3Region     = errors.New("yandex_s3 region is empty")
+	ErrEmptyS3Key        = errors.New("yandex_s3 key is empty")
+	ErrEmptyS3Secret     = errors.New("yandex_s3 secret is empty")
 )
 
 type YandexS3Config struct {

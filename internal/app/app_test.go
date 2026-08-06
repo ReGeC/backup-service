@@ -158,16 +158,15 @@ func TestStartCronDisabled(t *testing.T) {
 	require.Contains(t, err.Error(), "CRON_ENABLE=false")
 }
 
-
 func TestRunBackupCycle_ContextCancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
 	a := &App{
-		ctx:         ctx,
-		config:      &config.BackupConfig{},
-		backuppers:  map[string]backup.Backupper{},
-		notifiers:   map[string]notifier.Notifier{},
+		ctx:        ctx,
+		config:     &config.BackupConfig{},
+		backuppers: map[string]backup.Backupper{},
+		notifiers:  map[string]notifier.Notifier{},
 	}
 
 	a.runBackupCycle(ctx)
@@ -202,7 +201,7 @@ func TestRunBackupCycle_BackupError(t *testing.T) {
 	a := &App{
 		ctx: ctx,
 		config: &config.BackupConfig{
-			BackupPath: "/tmp",
+			BackupPath:  "/tmp",
 			StorageType: "local",
 		},
 		backupRepo: repo,
@@ -253,10 +252,10 @@ func TestRunBackupCycle_SaveError(t *testing.T) {
 	a := &App{
 		ctx: ctx,
 		config: &config.BackupConfig{
-			BackupPath: tmp,
+			BackupPath:  tmp,
 			StorageType: "local",
 		},
-		storage: st,
+		storage:    st,
 		backupRepo: repo,
 		backuppers: map[string]backup.Backupper{
 			"postgres": backupper,
@@ -310,10 +309,10 @@ func TestRunBackupCycle_Success(t *testing.T) {
 	a := &App{
 		ctx: ctx,
 		config: &config.BackupConfig{
-			BackupPath: tmp,
+			BackupPath:  tmp,
 			StorageType: "local",
 		},
-		storage: st,
+		storage:    st,
 		backupRepo: repo,
 		backuppers: map[string]backup.Backupper{
 			"postgres": backupper,
@@ -467,12 +466,12 @@ func TestStart_Integration(t *testing.T) {
 	mockStorage := storageMocks.NewMockStorage(t)
 
 	mockStorage.EXPECT().
-    	List(mock.Anything).
-    	Return([]storage.FileInfo{}, nil)
+		List(mock.Anything).
+		Return([]storage.FileInfo{}, nil)
 
 	a := &App{
-		ctx:       ctx,
-		cancel:    cancel,
+		ctx:    ctx,
+		cancel: cancel,
 		config: &config.BackupConfig{
 			CronEnable:     true,
 			BackupSchedule: "*/10 * * * * *",
@@ -483,7 +482,7 @@ func TestStart_Integration(t *testing.T) {
 		backuppers: map[string]backup.Backupper{},
 		notifiers:  map[string]notifier.Notifier{},
 
-		storage:    mockStorage,
+		storage: mockStorage,
 	}
 
 	done := make(chan error, 1)

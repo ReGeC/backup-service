@@ -39,22 +39,18 @@ func main() {
 		log.Fatal("не указан тип бэкаппера: -type")
 	}
 
-
 	cfg, err := config.NewBackupConfig()
 	if err != nil {
 		log.Fatal("Ошибка конфигурации: ", err)
 	}
 
-
 	ctx := context.Background()
-
 
 	// Инициализация storage
 	st, err := storage.NewStorage(cfg.StorageType)
 	if err != nil {
 		log.Fatal("Ошибка создания хранилища: ", err)
 	}
-
 
 	// Инициализация backupper-ов
 	backuppers := backup.InitBackuppers()
@@ -66,7 +62,6 @@ func main() {
 			*backupType,
 		)
 	}
-
 
 	// Получаем файл из storage
 	localBackupPath, err := st.Download(
@@ -81,7 +76,6 @@ func main() {
 		)
 	}
 
-
 	// Восстанавливаем
 	restoredPath, err := backupper.RestoreBackup(
 		ctx,
@@ -94,7 +88,6 @@ func main() {
 			err,
 		)
 	}
-
 
 	log.Println("БД успешно восстановлена:")
 	log.Println(restoredPath)

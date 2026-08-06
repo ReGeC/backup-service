@@ -56,7 +56,7 @@ func TestInitDB(t *testing.T) {
 		// Первая инициализация
 		db1, err := database.InitDB(dbName)
 		require.NoError(t, err)
-		
+
 		sqlDB1, err := db1.DB()
 		require.NoError(t, err)
 		err = sqlDB1.Close()
@@ -131,14 +131,14 @@ func TestInitDB_Schema(t *testing.T) {
 
 	t.Run("has indexes", func(t *testing.T) {
 		migrator := db.Migrator()
-		
+
 		// Проверяем индексы
 		hasNameIndex := migrator.HasIndex(&models.BackupLog{}, "idx_backup_logs_name")
 		assert.True(t, hasNameIndex)
-		
+
 		hasCreatedAtIndex := migrator.HasIndex(&models.BackupLog{}, "idx_backup_logs_created_at")
 		assert.True(t, hasCreatedAtIndex)
-		
+
 		hasDeletedAtIndex := migrator.HasIndex(&models.BackupLog{}, "idx_backup_logs_deleted_at")
 		assert.True(t, hasDeletedAtIndex)
 	})
@@ -320,7 +320,7 @@ func TestInitDB_TableName(t *testing.T) {
 func TestInitDB_WithInMemory(t *testing.T) {
 	// Используем in-memory базу
 	dbName := "file::memory:?cache=shared"
-	
+
 	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	require.NoError(t, err)
 

@@ -123,11 +123,11 @@ func TestTelegramNotifier_Send(t *testing.T) {
 	}{
 		// --- Успешный сценарий ---
 		{
-			name:      "успешная отправка (HTTP 200)",
-			botToken:  "valid_token",
-			chatID:    "123456",
-			ctx:       context.Background(),
-			message:   "Hello!",
+			name:     "успешная отправка (HTTP 200)",
+			botToken: "valid_token",
+			chatID:   "123456",
+			ctx:      context.Background(),
+			message:  "Hello!",
 			transport: &mockRoundTripper{
 				roundTrip: func(req *http.Request) (*http.Response, error) {
 					return &http.Response{
@@ -141,9 +141,9 @@ func TestTelegramNotifier_Send(t *testing.T) {
 
 		// --- Ошибки контекста ---
 		{
-			name:      "контекст уже отменён",
-			botToken:  "valid_token",
-			chatID:    "123456",
+			name:     "контекст уже отменён",
+			botToken: "valid_token",
+			chatID:   "123456",
 			ctx: func() context.Context {
 				ctx, cancel := context.WithCancel(context.Background())
 				cancel()
@@ -159,9 +159,9 @@ func TestTelegramNotifier_Send(t *testing.T) {
 			errContains: context.Canceled.Error(),
 		},
 		{
-			name:      "контекст с истекшим дедлайном",
-			botToken:  "valid_token",
-			chatID:    "123456",
+			name:     "контекст с истекшим дедлайном",
+			botToken: "valid_token",
+			chatID:   "123456",
 			ctx: func() context.Context {
 				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
 				defer cancel()
@@ -179,11 +179,11 @@ func TestTelegramNotifier_Send(t *testing.T) {
 
 		// --- Ошибка формирования запроса ---
 		{
-			name:      "невалидный URL (токен с переносом строки)",
-			botToken:  "токен\nс_переносом",
-			chatID:    "123456",
-			ctx:       context.Background(),
-			message:   "test",
+			name:     "невалидный URL (токен с переносом строки)",
+			botToken: "токен\nс_переносом",
+			chatID:   "123456",
+			ctx:      context.Background(),
+			message:  "test",
 			transport: &mockRoundTripper{
 				roundTrip: func(req *http.Request) (*http.Response, error) {
 					return nil, nil

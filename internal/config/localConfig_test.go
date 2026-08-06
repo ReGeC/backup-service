@@ -6,8 +6,8 @@ import (
 	"backup-service/internal/config"
 	mocks "backup-service/internal/config/mocks"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLocalConfig_ValidateConfig(t *testing.T) {
@@ -48,11 +48,11 @@ func TestLocalConfig_ValidateConfig(t *testing.T) {
 
 func TestNewLocalConfigWithLoader(t *testing.T) {
 	tests := []struct {
-		name          string
-		envValue      string
-		wantPath      string
-		wantEnabled   bool
-		wantErr       error
+		name        string
+		envValue    string
+		wantPath    string
+		wantEnabled bool
+		wantErr     error
 	}{
 		{
 			name:        "valid config",
@@ -94,8 +94,8 @@ func TestNewLocalConfigWithLoader(t *testing.T) {
 	}
 }
 
-func TestNewLocalConfig (t *testing.T) {
-	t.Run("Создание local конфига с реальным envloader", func (t *testing.T) {
+func TestNewLocalConfig(t *testing.T) {
+	t.Run("Создание local конфига с реальным envloader", func(t *testing.T) {
 		// Устанавливаем переменные окружения для теста
 		t.Setenv("LOCAL_STORAGE_PATH", "/var/backups")
 

@@ -6,8 +6,8 @@ import (
 	"backup-service/internal/config"
 	mocks "backup-service/internal/config/mocks"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSQLiteConfig_ValidateConfig(t *testing.T) {

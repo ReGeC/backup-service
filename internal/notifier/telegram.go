@@ -24,18 +24,18 @@ func init() {
 }
 
 func newTelegramNotifier() (Notifier, error) {
-    cfg, enabled, err := config.NewTelegramConfigWithLoader(telegramConfigLoader)
-    if err != nil {
-        return nil, err
-    }
-	
+	cfg, enabled, err := config.NewTelegramConfigWithLoader(telegramConfigLoader)
+	if err != nil {
+		return nil, err
+	}
+
 	if !enabled {
-        return nil, ErrTelegramDisabled
-    }
+		return nil, ErrTelegramDisabled
+	}
 
-	client := &http.Client{ Timeout: 10 * time.Second }
+	client := &http.Client{Timeout: 10 * time.Second}
 
-    return NewTelegramNotifier(cfg.TelegramBotToken, cfg.TelegramChatID, client), nil
+	return NewTelegramNotifier(cfg.TelegramBotToken, cfg.TelegramChatID, client), nil
 }
 
 type TelegramNotifier struct {
@@ -48,7 +48,7 @@ func NewTelegramNotifier(telegramBotToken, telegramChatID string, client *http.C
 	return &TelegramNotifier{
 		botToken: telegramBotToken,
 		chatID:   telegramChatID,
-		client: client,
+		client:   client,
 	}
 }
 
@@ -57,7 +57,7 @@ func (t *TelegramNotifier) Send(ctx context.Context, message string) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	
+
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", t.botToken)
 
 	payload := map[string]string{

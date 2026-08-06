@@ -1,8 +1,8 @@
 package database_test
 
 import (
-	"backup-service/internal/storage/database"
 	"backup-service/internal/models"
+	"backup-service/internal/storage/database"
 	"os"
 	"testing"
 

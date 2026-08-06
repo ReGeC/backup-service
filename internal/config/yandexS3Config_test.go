@@ -6,8 +6,8 @@ import (
 	"backup-service/internal/config"
 	mocks "backup-service/internal/config/mocks"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestYandexS3Config_ValidateConfig(t *testing.T) {
@@ -133,13 +133,13 @@ func TestYandexS3Config_ValidateConfig(t *testing.T) {
 
 func TestNewYandexS3ConfigWithLoader(t *testing.T) {
 	tests := []struct {
-		name          string
-		s3Endpoint    string
-		s3Bucket      string
-		s3Region      string
-		s3Key         string
-		s3Secret      string
-		wantEnabled   bool
+		name        string
+		s3Endpoint  string
+		s3Bucket    string
+		s3Region    string
+		s3Key       string
+		s3Secret    string
+		wantEnabled bool
 	}{
 		{
 			name:        "full config with default endpoint",

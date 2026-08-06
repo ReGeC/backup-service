@@ -13,7 +13,7 @@ var ErrDisabled = errors.New("Notifier is disabled: ")
 //go:generate mockery
 type Notifier interface {
 	// Функция отправки уведомлений
-	Send (ctx context.Context, message string) error
+	Send(ctx context.Context, message string) error
 }
 
 var registry = map[string]func() (Notifier, error){}
