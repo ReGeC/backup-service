@@ -11,7 +11,7 @@ var runCmd = &cobra.Command{
 	Short: "Run one backup cycle",
 	Long:  "Runs a single backup cycle and exits.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		appInstance, err := app.New()
+		appInstance, err := app.New(configPath)
 		if err != nil {
 			return err
 		}
@@ -22,5 +22,8 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
+	restoreCmd.Flags().StringVar(&configPath, "config", "", "Config path")
+	_ = restoreCmd.MarkFlagRequired("config")
+
 	rootCmd.AddCommand(runCmd)
 }

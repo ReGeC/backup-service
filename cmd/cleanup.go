@@ -11,7 +11,7 @@ var cleanupCmd = &cobra.Command{
 	Short: "Cleanup old backups",
 	Long:  "Removes old backups according to the configured retention policy.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		appInstance, err := app.New()
+		appInstance, err := app.New(configPath)
 		if err != nil {
 			return err
 		}
@@ -22,5 +22,8 @@ var cleanupCmd = &cobra.Command{
 }
 
 func init() {
+	restoreCmd.Flags().StringVar(&configPath, "config", "", "Config path")
+	_ = restoreCmd.MarkFlagRequired("config")
+
 	rootCmd.AddCommand(cleanupCmd)
 }

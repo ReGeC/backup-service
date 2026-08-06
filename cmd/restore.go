@@ -8,7 +8,7 @@ import (
 
 var (
 	restoreBackup string
-	restoreType   string
+	restoreType string
 )
 
 var restoreCmd = &cobra.Command{
@@ -19,7 +19,7 @@ var restoreCmd = &cobra.Command{
     --backup backup_2026-08-06.tar.gz \
     --type postgres`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		appInstance, err := app.New()
+		appInstance, err := app.New(configPath)
 		if err != nil {
 			return err
 		}
@@ -32,9 +32,11 @@ var restoreCmd = &cobra.Command{
 func init() {
 	restoreCmd.Flags().StringVar(&restoreBackup, "backup", "", "Backup file")
 	restoreCmd.Flags().StringVar(&restoreType, "type", "", "Backup type")
+	restoreCmd.Flags().StringVar(&configPath, "config", "", "Config path")
 
 	_ = restoreCmd.MarkFlagRequired("backup")
 	_ = restoreCmd.MarkFlagRequired("type")
+	_ = restoreCmd.MarkFlagRequired("config")
 
 	rootCmd.AddCommand(restoreCmd)
 }

@@ -2,8 +2,6 @@ package config
 
 import (
 	"errors"
-
-	"backup-service/internal/config/loader"
 )
 
 var (
@@ -61,7 +59,11 @@ func (p *PostgresConfig) ValidateConfig() error {
 }
 
 func NewPostgresConfig() (*PostgresConfig, bool, error) {
-	return NewPostgresConfigWithLoader(&loader.EnvLoader{})
+	loader, err := NewConfigLoader(defaultConfigPath)
+	if err != nil {
+		return nil, false, err
+	}
+	return NewPostgresConfigWithLoader(loader)
 }
 
 func NewPostgresConfigWithLoader(loader ConfigLoader) (*PostgresConfig, bool, error) {

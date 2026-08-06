@@ -132,7 +132,7 @@ func TestNewBackupConfig(t *testing.T) {
 		t.Setenv("CRON_ENABLE", "true")
 		t.Setenv("CRON_SCHEDULE", "0 0 2 * * *")
 
-		cfg, err := config.NewBackupConfig()
+		cfg, err := config.NewBackupConfig("")
 
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)

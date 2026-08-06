@@ -33,7 +33,7 @@ type App struct {
 	cancel     context.CancelFunc
 }
 
-func New() (*App, error) {
+func New(configPath string) (*App, error) {
 	slog.Info("инициализация приложения")
 
     if err := godotenv.Load(); err != nil {
@@ -41,7 +41,7 @@ func New() (*App, error) {
     }
 
 	// Загрузка конфига
-	cfg, err := config.NewBackupConfig()
+	cfg, err := config.NewBackupConfig(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("загрузка конфига: %w", err)
 	}
@@ -238,8 +238,8 @@ func (a *App) List() error {
 	return nil
 }
 
-func (a *App) ReloadConfig() error {
-	cfg, err := config.NewBackupConfig()
+func (a *App) ReloadConfig(configPath string) error {
+	cfg, err := config.NewBackupConfig(configPath)
 	if err != nil {
 		return err
 	}

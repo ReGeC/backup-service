@@ -11,7 +11,7 @@ var startCmd = &cobra.Command{
 	Short: "Start backup scheduler",
 	Long:  "Starts the backup scheduler and runs it continuously.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		appInstance, err := app.New()
+		appInstance, err := app.New(configPath)
 		if err != nil {
 			return err
 		}
@@ -22,5 +22,8 @@ var startCmd = &cobra.Command{
 }
 
 func init() {
+	restoreCmd.Flags().StringVar(&configPath, "config", "", "Config path")
+	_ = restoreCmd.MarkFlagRequired("config")
+
 	rootCmd.AddCommand(startCmd)
 }

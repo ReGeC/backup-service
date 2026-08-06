@@ -2,8 +2,6 @@ package config
 
 import (
 	"errors"
-
-	"backup-service/internal/config/loader"
 )
 
 var ErrEmptyLocalStoragePath = errors.New("local storage path is empty")
@@ -36,7 +34,11 @@ func (l *LocalConfig) ValidateConfig() error {
 }
 
 func NewLocalConfig() (*LocalConfig, bool, error) {
-	return NewLocalConfigWithLoader(&loader.EnvLoader{})
+	loader, err := NewConfigLoader(defaultConfigPath)
+	if err != nil {
+		return nil, false, err
+	}
+	return NewLocalConfigWithLoader(loader)
 }
 
 func NewLocalConfigWithLoader(loader ConfigLoader) (*LocalConfig, bool, error) {

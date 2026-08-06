@@ -2,8 +2,6 @@ package config
 
 import (
 	"errors"
-
-	"backup-service/internal/config/loader"
 )
 
 var (
@@ -44,7 +42,11 @@ func (t *TelegramConfig) ValidateConfig() error {
 }
 
 func NewTelegramConfig() (*TelegramConfig, bool, error) {
-	return NewTelegramConfigWithLoader(&loader.EnvLoader{})
+	loader, err := NewConfigLoader(defaultConfigPath)
+	if err != nil {
+		return nil, false, err
+	}
+	return NewTelegramConfigWithLoader(loader)
 }
 
 func NewTelegramConfigWithLoader(loader ConfigLoader) (*TelegramConfig, bool, error) {

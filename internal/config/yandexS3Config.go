@@ -3,8 +3,6 @@ package config
 import (
 	"errors"
 	"strings"
-
-	"backup-service/internal/config/loader"
 )
 
 var (
@@ -63,7 +61,11 @@ func (s *YandexS3Config) ValidateConfig() error {
 }
 
 func NewYandexS3Config() (*YandexS3Config, bool, error) {
-	return NewYandexS3ConfigWithLoader(&loader.EnvLoader{})
+	loader, err := NewConfigLoader(defaultConfigPath)
+	if err != nil {
+		return nil, false, err
+	}
+	return NewYandexS3ConfigWithLoader(loader)
 }
 
 func NewYandexS3ConfigWithLoader(loader ConfigLoader) (*YandexS3Config, bool, error) {
