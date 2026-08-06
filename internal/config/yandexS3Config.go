@@ -61,11 +61,7 @@ func (s *YandexS3Config) ValidateConfig() error {
 }
 
 func NewYandexS3Config() (*YandexS3Config, bool, error) {
-	loader, err := NewConfigLoader(defaultConfigPath)
-	if err != nil {
-		return nil, false, err
-	}
-	return NewYandexS3ConfigWithLoader(loader)
+	return NewYandexS3ConfigWithLoader(GetConfigLoader())
 }
 
 func NewYandexS3ConfigWithLoader(loader ConfigLoader) (*YandexS3Config, bool, error) {

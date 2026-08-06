@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-var defaultConfigPath string
+var defaultConfigLoader ConfigLoader = &loader.EnvLoader{}
 
 //go:generate mockery
 type ConfigLoader interface {
@@ -25,6 +25,14 @@ func NewConfigLoader(configPath string) (ConfigLoader, error) {
 	}
 
 	return viperLoader, nil
+}
+
+func SetConfigLoader(l ConfigLoader) {
+	defaultConfigLoader = l
+}
+
+func GetConfigLoader() ConfigLoader {
+	return defaultConfigLoader
 }
 
 

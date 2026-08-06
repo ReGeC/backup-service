@@ -26,7 +26,7 @@ import (
 )
 
 func TestGetCronStringForCleanup(t *testing.T) {
-	require.Equal(t, "* * 1 * * *", getCronStringForCleanup())
+	require.Equal(t, "0 0 1 * * *", getCronStringForCleanup())
 }
 
 func TestStop(t *testing.T) {

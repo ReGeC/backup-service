@@ -17,7 +17,6 @@ import (
 	"backup-service/internal/storage"
 	"backup-service/internal/storage/database"
 
-	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -35,10 +34,6 @@ type App struct {
 
 func New(configPath string) (*App, error) {
 	slog.Info("инициализация приложения")
-
-    if err := godotenv.Load(); err != nil {
-        slog.Warn(".env файл не найден, используются переменные по умолчанию")
-    }
 
 	// Загрузка конфига
 	cfg, err := config.NewBackupConfig(configPath)
@@ -113,9 +108,9 @@ func (a *App) Start() error {
 	// Стартовый бэкап
 	go func() {
 		slog.Info("стартовый бэкап (проверка)")
-		ctx, cancel := context.WithTimeout(a.ctx, 30*time.Minute)
-		defer cancel()
-		a.runBackupCycle(ctx)
+		backupCtx, backupCancel := context.WithTimeout(a.ctx, 30*time.Minute)
+		defer backupCancel()
+		a.runBackupCycle(backupCtx)
 
 		slog.Info("стартовая очистка (проверка)")
 		cleanupCtx, cleanupCancel := context.WithTimeout(a.ctx, 1*time.Minute)
@@ -125,9 +120,9 @@ func (a *App) Start() error {
 
 	// Добавление задач в планировщик
 	backupJob := func() {
-		ctx, cancel := context.WithTimeout(a.ctx, 30*time.Minute)
-		defer cancel()
-		a.runBackupCycle(ctx)
+		backupCtx, backupCancel := context.WithTimeout(a.ctx, 30*time.Minute)
+		defer backupCancel()
+		a.runBackupCycle(backupCtx)
 	}
 
 	if _, err := a.scheduler.AddJob(a.config.BackupSchedule, backupJob); err != nil {
@@ -135,9 +130,9 @@ func (a *App) Start() error {
 	}
 
 	cleanupJob := func() {
-		ctx, cancel := context.WithTimeout(a.ctx, 1*time.Minute)
-		defer cancel()
-		a.cleanupOldBackups(ctx)
+		cleanupCtx, cleanupCancel := context.WithTimeout(a.ctx, 1*time.Minute)
+		defer cleanupCancel()
+		a.cleanupOldBackups(cleanupCtx)
 	}
 
 	if _, err := a.scheduler.AddJob(getCronStringForCleanup(), cleanupJob); err != nil {
@@ -283,7 +278,7 @@ func (a *App) runBackupCycle(ctx context.Context) {
 		default:
 		}
 
-		slog.Info(fmt.Sprintf("Запуск бэкапа: %v", typ))
+		slog.Info("Запуск бэкапа", "backup_type", typ)
 
 		// Создание бэкапа
 		localPath, err := backup.RunBackup(ctx, backupper, a.backupRepo, a.config.BackupPath, a.config.StorageType)
@@ -305,7 +300,11 @@ func (a *App) runBackupCycle(ctx context.Context) {
 		msg := "Бэкап " + typ + " сохранен: " + remotePath
 		notifier.SendAll(a.notifiers, ctx, msg)
 
-		slog.Info("Бэкап %s сохранен в хранилище: %s", typ, remotePath)
+		slog.Info(
+	        "Бэкап сохранен в хранилище",
+	        "type", typ,
+	        "path", remotePath,
+        )
 	}
 	slog.Info("Цикл бэкапов завершен")
 }
@@ -342,5 +341,5 @@ func (a *App) waitForShutdown() {
 }
 
 func getCronStringForCleanup() string {
-	return "* * 1 * * *"
+	return "0 0 1 * * *"
 }

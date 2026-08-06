@@ -34,11 +34,7 @@ func (l *LocalConfig) ValidateConfig() error {
 }
 
 func NewLocalConfig() (*LocalConfig, bool, error) {
-	loader, err := NewConfigLoader(defaultConfigPath)
-	if err != nil {
-		return nil, false, err
-	}
-	return NewLocalConfigWithLoader(loader)
+	return NewLocalConfigWithLoader(GetConfigLoader())
 }
 
 func NewLocalConfigWithLoader(loader ConfigLoader) (*LocalConfig, bool, error) {

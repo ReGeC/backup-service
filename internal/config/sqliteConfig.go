@@ -35,11 +35,7 @@ func (s *SQLiteConfig) ValidateConfig() error {
 }
 
 func NewSQLiteConfig() (*SQLiteConfig, bool, error) {
-	loader, err := NewConfigLoader(defaultConfigPath)
-	if err != nil {
-		return nil, false, err
-	}
-	return NewSQLiteConfigWithLoader(loader)
+	return NewSQLiteConfigWithLoader(GetConfigLoader())
 }
 
 func NewSQLiteConfigWithLoader(loader ConfigLoader) (*SQLiteConfig, bool, error) {

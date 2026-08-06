@@ -42,11 +42,7 @@ func (t *TelegramConfig) ValidateConfig() error {
 }
 
 func NewTelegramConfig() (*TelegramConfig, bool, error) {
-	loader, err := NewConfigLoader(defaultConfigPath)
-	if err != nil {
-		return nil, false, err
-	}
-	return NewTelegramConfigWithLoader(loader)
+	return NewTelegramConfigWithLoader(GetConfigLoader())
 }
 
 func NewTelegramConfigWithLoader(loader ConfigLoader) (*TelegramConfig, bool, error) {

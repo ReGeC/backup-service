@@ -46,12 +46,12 @@ func (b *BackupConfig) ValidateConfig() error {
 }
 
 func NewBackupConfig(configPath string) (*BackupConfig, error) {
-	defaultConfigPath = configPath
-	loader, err := NewConfigLoader(defaultConfigPath)
+	defaultConfigLoader, err := NewConfigLoader(configPath)
+	SetConfigLoader(defaultConfigLoader)
 	if err != nil {
 		return nil, err
 	}
-	return NewBackupConfigWithLoader(loader)
+	return NewBackupConfigWithLoader(GetConfigLoader())
 }
 
 func NewBackupConfigWithLoader(loader ConfigLoader) (*BackupConfig, error) {

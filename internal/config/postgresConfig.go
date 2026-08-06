@@ -24,16 +24,16 @@ type PostgresConfig struct {
 }
 
 func (p *PostgresConfig) LoadConfig() (bool, error) {
-	p.PGEnable = p.loader.GetBool([]string{"pg", "enable"}, false)
+	p.PGEnable = p.loader.GetBool([]string{"postgres", "enable"}, false)
 	if !p.PGEnable {
 		return false, nil
 	}
 
-	p.PGHost = p.loader.GetString([]string{"pg", "host"}, "localhost")
-	p.PGPort = p.loader.GetInt([]string{"pg", "port"}, 5432)
-	p.PGUser = p.loader.GetString([]string{"pg", "user"}, "postgres")
-	p.PGPassword = p.loader.GetString([]string{"pg", "password"}, "")
-	p.PGDatabase = p.loader.GetString([]string{"pg", "database"}, "postgres")
+	p.PGHost = p.loader.GetString([]string{"postgres", "host"}, "localhost")
+	p.PGPort = p.loader.GetInt([]string{"postgres", "port"}, 5432)
+	p.PGUser = p.loader.GetString([]string{"postgres", "user"}, "postgres")
+	p.PGPassword = p.loader.GetString([]string{"postgres", "password"}, "")
+	p.PGDatabase = p.loader.GetString([]string{"postgres", "database"}, "postgres")
 
 	return true, p.ValidateConfig()
 }
@@ -59,11 +59,7 @@ func (p *PostgresConfig) ValidateConfig() error {
 }
 
 func NewPostgresConfig() (*PostgresConfig, bool, error) {
-	loader, err := NewConfigLoader(defaultConfigPath)
-	if err != nil {
-		return nil, false, err
-	}
-	return NewPostgresConfigWithLoader(loader)
+	return NewPostgresConfigWithLoader(GetConfigLoader())
 }
 
 func NewPostgresConfigWithLoader(loader ConfigLoader) (*PostgresConfig, bool, error) {
