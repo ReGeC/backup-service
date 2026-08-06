@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configPath string
+var configPath string = "./config.yaml"
 
 var rootCmd = &cobra.Command{
 	Use:   "backup-service",
