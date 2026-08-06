@@ -1,0 +1,36 @@
+postgres:
+  enable: false
+  host: localhost
+  port: 5432
+  user: postgres
+  password: ""
+  database: postgres
+
+sqlite:
+  enable: false
+  path: ""
+
+backup:
+  storage: local
+  temp_path: ./tmp/backups
+  retention_days: 1
+
+local_storage:
+  path: ./backups
+
+s3:
+  yandex:
+    endpoint: https://storage.yandexcloud.net
+    bucket: my-backups
+    region: ru-central1
+    key: your_access_key
+    secret: your_secret_key
+
+telegram:
+  enable: false
+  bot_token: ""
+  chat_id: ""
+
+cron:
+  enable: true
+  schedule: "0 0 3 * * *"

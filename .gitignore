@@ -13,6 +13,7 @@
 .env
 .env.local
 .env.*.local
+config.yaml
 
 # DB files (ты сказал не надо)
 *.db
