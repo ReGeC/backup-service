@@ -1,4 +1,5 @@
 APP := backup-service
+CONFIG_FILE ?= defaultConfig.yaml
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
@@ -12,7 +13,10 @@ LDFLAGS := -s -w \
 .PHONY: build release clean linux windows darwin darwin-arm test fmt
 
 build:
+	@mkdir -p bin
 	go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(APP).exe .
+	@test -f $(CONFIG_FILE) || (echo "$(CONFIG_FILE) not found"; exit 1)
+	cp $(CONFIG_FILE) bin/config.yaml
 
 linux:
 	@mkdir -p dist
